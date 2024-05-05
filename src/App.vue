@@ -1,20 +1,27 @@
 <template>
   <NavbarDesktop v-if="isDesktop"/>
-  <AppFooter v-if="isDesktop"/>
+  <NavbarMobile v-else/>
+  <FooterDesktop v-if="isDesktop"/>
+
 </template>
 
 <script>
 import NavbarDesktop from './components/NavbarDesktop.vue'
-import AppFooter from './components/AppFooter.vue'
+import FooterDesktop from './components/FooterDesktop.vue'
+
+import NavbarMobile from './components/NavbarMobile.vue'
 export default {
   name: 'App',
   components: {
+    //Desktop
     NavbarDesktop,
-    AppFooter
+    FooterDesktop,
+    //Mobile
+    NavbarMobile
   },
   data() {
     return {
-      isDesktop: window.innerWidth >= 720
+      isDesktop: window.innerWidth >= 718,
     };
   },
   mounted() {
@@ -25,7 +32,7 @@ export default {
   },
   methods: {
     handleResize() {
-      this.isDesktop = window.innerWidth > 768;
+      this.isDesktop = window.innerWidth > 718;
     }
   }
 }
