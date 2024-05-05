@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div class="container">
         <a class="navbar-brand" href="#">Navbar</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,11 +24,11 @@
   
   <script>
   export default {
-    name: 'AppNavbar',
-    // Możesz tutaj zdefiniować właściwości i metody komponentu Navbar
+    name: 'NavbarDesktop',
   }
   </script>
   
   <style scoped>
   /* Stylizacja specyficzna dla komponentu Navbar */
   </style>
+  
