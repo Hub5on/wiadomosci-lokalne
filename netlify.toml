@@ -1,3 +1,4 @@
 [build]
-  command = "node src/rssParser.js"
+  command = "npm run build && node src/rssParser.js"
   functions = "functions/"
+  publish = "./"
