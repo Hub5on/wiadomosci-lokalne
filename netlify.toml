@@ -1,0 +1,3 @@
+[build]
+  command = "node src/rssParser.js"
+  functions = "functions/"
