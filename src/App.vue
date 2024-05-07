@@ -1,14 +1,16 @@
 <template>
+  
   <NavbarDesktop v-if="isDesktop"/>
-  <NavbarMobile v-else/>
+  <HeaderMobile v-else/>
   <FooterDesktop v-if="isDesktop"/>
+  <NavbarMobile v-else/>
 
 </template>
 
 <script>
 import NavbarDesktop from './components/NavbarDesktop.vue'
 import FooterDesktop from './components/FooterDesktop.vue'
-
+import HeaderMobile from './components/HeaderMobile.vue'
 import NavbarMobile from './components/NavbarMobile.vue'
 export default {
   name: 'App',
@@ -17,6 +19,7 @@ export default {
     NavbarDesktop,
     FooterDesktop,
     //Mobile
+    HeaderMobile,
     NavbarMobile
   },
   data() {
@@ -39,5 +42,8 @@ export default {
 </script>
 
 <style>
-
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+body{
+  font-family: 'Lato', sans-serif;
+}
 </style>

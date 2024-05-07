@@ -22,8 +22,10 @@
     "rss-parser": "^3.13.0",
     "vue": "^3.4.26",
     "vue-loader": "^17.4.2",
+    "vue-router": "^4.3.2",
     "vue-template-compiler": "^2.6.12",
-    "vueify": "^2.0.1"
+    "vueify": "^2.0.1",
+    "vuetify": "^3.6.3"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
