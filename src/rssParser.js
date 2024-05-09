@@ -30,10 +30,10 @@ function addZeroIfNeeded(num) {
     // Sprawdź, czy są jakieś nowe artykuły
     if (feed.items.length === 0) {
       console.log('Brak nowych artykułów do dodania.');
-      process.exit(); // Zakończ działanie skryptu, jeśli nie ma nowych artykułów
+      process.exit();
     }
 
-    let newArticlesCount = 0; // Licznik nowych artykułów
+    let newArticlesCount = 0; 
 
     for (const item of feed.items) {
       const existingArticle = await Article.findOne({ link: item.link });
@@ -67,9 +67,9 @@ function addZeroIfNeeded(num) {
         const newArticle = new Article({
           title: item.title,
           link: item.link,
-          description: item.contentSnippet, // Możesz użyć item.description, jeśli contentSnippet nie zawiera pełnych opisów
+          description: item.contentSnippet, 
           pubDate: new Date(formattedDate),
-          creator: creator // Użyj usuniętej spacji przed i po 'creator'
+          creator: creator 
         });
 
         // Zapisz artykuł do bazy danych
@@ -84,12 +84,16 @@ function addZeroIfNeeded(num) {
     // Sprawdź, czy dodano jakieś nowe artykuły
     if (newArticlesCount === 0) {
       console.log('Brak nowych artykułów do dodania.');
-      process.exit(); // Zakończ działanie skryptu, jeśli nie dodano nowych artykułów
+      process.exit();
+    }
+    if(newArticlesCount > 0) {
+      console.log(`Dodano ${newArticlesCount} nowych artykułów do bazy danych.`)
+      process.exit(); 
     }
 
   } catch (err) {
     console.error('Błąd podczas pobierania danych:', err);
-    process.exit(1); // Zakończ działanie skryptu z kodem błędu 1 w przypadku wystąpienia błędu
+    process.exit(1);
   }
 })();
 
