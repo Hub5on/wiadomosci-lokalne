@@ -2,6 +2,7 @@
   
   <NavbarDesktop v-if="isDesktop"/>
   <HeaderMobile v-else/>
+  <ArticlesMobile/>
   <FooterDesktop v-if="isDesktop"/>
   <NavbarMobile v-else/>
 
@@ -12,6 +13,8 @@ import NavbarDesktop from './components/NavbarDesktop.vue'
 import FooterDesktop from './components/FooterDesktop.vue'
 import HeaderMobile from './components/HeaderMobile.vue'
 import NavbarMobile from './components/NavbarMobile.vue'
+import ArticlesMobile from './components/ArticlesMobile.vue'
+
 export default {
   name: 'App',
   components: {
@@ -20,6 +23,7 @@ export default {
     FooterDesktop,
     //Mobile
     HeaderMobile,
+    ArticlesMobile,
     NavbarMobile
   },
   data() {
