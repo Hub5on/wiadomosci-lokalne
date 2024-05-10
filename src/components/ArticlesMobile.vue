@@ -39,6 +39,7 @@ export default {
       const formattedTime = `${this.addZeroIfNeeded(date.getHours())}:${this.addZeroIfNeeded(date.getMinutes())}`;
       return `${formattedDate} ${formattedTime}`;
     },
+
     addZeroIfNeeded(num) {
       return num < 10 ? '0' + num : num;
     }
