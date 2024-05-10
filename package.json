@@ -6,7 +6,6 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "vercel-build": "echo hello"
   },
   "dependencies": {
     "@floating-ui/vue": "^1.0.6",
