@@ -2,7 +2,7 @@
   
   <NavbarDesktop v-if="isDesktop"/>
   <HeaderMobile v-else/>
-  <ArticlesMobile/>
+  <ArticlesMobile v-if="!isDesktop"/>
   <FooterDesktop v-if="isDesktop"/>
   <NavbarMobile v-else/>
 
