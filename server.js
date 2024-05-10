@@ -5,10 +5,13 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Połączenie z MongoDB
-mongoose.connect('mongodb+srv://Hub5on:svPFAAWueTHW5W4M@cluster0.p3vinnx.mongodb.net/wiadomosci-lokalne?retryWrites=true&w=majority&appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 
 // Model danych
@@ -89,10 +92,10 @@ app.get('/api/scrape-rss', async (req, res) => {
     }
     if (newArticlesCount > 0) {
       console.log(`Dodano ${newArticlesCount} nowych artykułów.`);
-      process.exit();
+      res.json({ message: `Dodano ${newArticlesCount} nowych artykułów.` });
+    } else {
+      res.json({ message: 'Brak nowych artykułów do dodania.' });
     }
-
-    res.json({ message: 'Dane z RSS zostały zaktualizowane' });
   } catch (error) {
     console.error('Błąd pobierania i zapisywania danych:', error);
     res.status(500).json({ message: 'Błąd pobierania i zapisywania danych' });
@@ -125,7 +128,4 @@ app.get('/api/articles', async (req, res) => {
   });
   
 
-// Start serwera
-app.listen(PORT, () => {
-  console.log(`Serwer działa na porcie ${PORT}`);
-});
+module.exports = app;
