@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const Parser = require('rss-parser');
 const mongoose = require('mongoose');
@@ -11,8 +12,14 @@ const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // Połączenie z MongoDB
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-const db = mongoose.connection;
+mongoose.connect(MONGODB_URI)
+    .then(() => {
+        console.log('Połączono z MongoDB');
+    })
+    .catch(err => {
+        console.error('Błąd połączenia z MongoDB:', err);
+    });
+
 
 // Model danych
 const articleSchema = new mongoose.Schema({
