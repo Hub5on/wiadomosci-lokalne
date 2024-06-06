@@ -48,8 +48,8 @@
   </script>
   <style>
   .content {
-    margin-top: 50px;
-    padding: 0 50px
+    margin-top: 40px;
+    padding: 0 150px
   }
   </style>
   
