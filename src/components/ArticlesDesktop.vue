@@ -51,5 +51,8 @@
     margin-top: 50px;
     padding: 0 250px
   }
+  li{
+    padding: 20px;
+  }
   </style>
   
