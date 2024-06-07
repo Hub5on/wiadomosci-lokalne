@@ -1,6 +1,6 @@
 <template>
     <div class="content">
-      <ul class="list-group list-group-flush p-3">
+      <ul class="list-group list-group-flush p-3 one-article">
         <li class="list-group-item list-group-item-action" v-for="article in articles" :key="article._id">
           <h2 class="mb-3">{{ article.title }}</h2>
           <p>{{ article.description }}</p>
@@ -51,7 +51,7 @@
     margin-top: 50px;
     padding: 0 250px
   }
-  li{
+  .onearticle li{
     padding: 20px;
   }
   </style>
