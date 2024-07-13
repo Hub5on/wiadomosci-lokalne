@@ -31,7 +31,7 @@ export default {
   },
   data() {
     return {
-      isDesktop: window.innerWidth >= 718,
+      isDesktop: window.innerWidth >= 768,
       title: 'Wiadomości lokalne'
     };
   },
@@ -44,7 +44,7 @@ export default {
   },
   methods: {
     handleResize() {
-      this.isDesktop = window.innerWidth > 718;
+      this.isDesktop = window.innerWidth > 768;
     },
     changeTitle(newTitle) {
       this.title = newTitle;
