@@ -1,9 +1,21 @@
 const { defineConfig } = require('@vue/cli-service')
+const {createProxyMiddleware} = require('http-proxy-middleware')
 module.exports = {
   transpileDependencies: [
     'vuetify' 
   ],
-  pwa:{
+  devServer: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000', // Adres Twojego serwera backendowego
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': ''
+        }
+      }
+    }
+  }
+  ,pwa:{
     manifestOptions: {
       name: 'Wiadomości Lokalne',
       short_name: 'Wiadomości Lokalne',
