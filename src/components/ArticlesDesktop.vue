@@ -40,7 +40,7 @@ export default {
   methods: {
     async fetchArticles() {
       try {
-        const response = await fetch('/api/articles');
+        const response = await fetch(`${this.getBaseUrl()}/api/articles`);
         const data = await response.json();
         this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
@@ -75,7 +75,7 @@ export default {
     },
     replaceLocalhostWithDomain(url) {
       const baseUrl = this.getBaseUrl();
-      return url.replace('localhost', baseUrl);
+      return url.replace('localhost', baseUrl.replace(/^http[s]?:\/\//, ''));
     },
     goToSource(link) {
       window.location.href = link;
