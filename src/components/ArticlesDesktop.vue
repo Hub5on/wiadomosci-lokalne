@@ -26,10 +26,6 @@
   </div>
 </template>
 
-
-
-
-
 <script>
 export default {
   name: 'ArticleList',
@@ -61,8 +57,7 @@ export default {
     },
     async fetchFirstImage(link) {
       try {
-        const baseUrl = getBaseUrl();
-        const response = await fetch(`${baseUrl}/api/proxy?url=${encodeURIComponent(link)}`);
+        const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
@@ -80,7 +75,7 @@ export default {
     },
     replaceLocalhostWithDomain(url) {
       const baseUrl = this.getBaseUrl();
-      return url.replace(baseUrl, 'http://powiatsredzki.pl');
+      return url.replace('localhost', baseUrl);
     },
     goToSource(link) {
       window.location.href = link;
@@ -101,7 +96,7 @@ export default {
 <style>
   .content {
     margin-top: 40px;
-    padding: 0 25%; /* Dostosuj padding dla responsywności */
+    padding: 0 25%;
     background-color: #f0f0f0;
   }
   .one-article li {
@@ -109,8 +104,8 @@ export default {
     margin-bottom: 25px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #fff;
-    border-radius: 15px; /* Dodaj border-radius dla całego li */
-    overflow: hidden; /* Upewnij się, że obrazki wypełniają zaokrąglone rogi */
+    border-radius: 15px;
+    overflow: hidden;
   }
   .article-item img {
     width: 100%;
@@ -118,7 +113,7 @@ export default {
     max-height: 50rem;
   }
   .article-item {
-    border-radius: 15px; /* Zaokrąglij rogi kontenera .article-item */
+    border-radius: 15px;
   }
   .article-text {
     padding: 5%;
@@ -127,14 +122,11 @@ export default {
     text-align: right;
   }
   .pub-date, .author {
-    font-size: 0.8vw; /* Rozmiar czcionki w zależności od szerokości widoku */
+    font-size: 0.8vw;
   }
-  @media (max-width: 576px) { /* Na ekranach mniejszych niż 576px */
+  @media (max-width: 576px) {
     .pub-date, .author {
-      font-size: 3vw; /* Dostosuj rozmiar czcionki dla daty publikacji i autora */
+      font-size: 3vw;
     }
   }
 </style>
-
-
-
