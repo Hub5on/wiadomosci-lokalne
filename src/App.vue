@@ -32,10 +32,12 @@ export default {
   data() {
     return {
       isDesktop: window.innerWidth >= 718,
+      title: 'Wiadomości lokalne'
     };
   },
   mounted() {
     window.addEventListener('resize', this.handleResize);
+    document.title = this.title;
   },
   unmounted() {
     window.removeEventListener('resize', this.handleResize);
@@ -43,6 +45,10 @@ export default {
   methods: {
     handleResize() {
       this.isDesktop = window.innerWidth > 718;
+    },
+    changeTitle(newTitle) {
+      this.title = newTitle;
+      document.title = newTitle;
     }
   }
 }
