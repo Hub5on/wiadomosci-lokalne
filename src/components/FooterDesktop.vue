@@ -1,5 +1,5 @@
 <template>
-    <footer class="footer bg-dark text-white text-center py-4 fixed-bottom">
+    <footer class="footer bg-dark text-white text-center py-2 fixed-bottom">
       <div class="container">
         <span>© 2024 WASE. All rights reserved.</span>
       </div>
