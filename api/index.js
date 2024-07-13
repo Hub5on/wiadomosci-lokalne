@@ -39,6 +39,19 @@ function addZeroIfNeeded(num) {
 // Parser RSS
 const parser = new Parser();
 
+app.get('/api/proxy', async (req, res) => {
+  try {
+    const url = req.query.url;
+    const response = await fetch(url);
+    const data = await response.text();
+    res.send(data);
+  } catch (error) {
+    console.error('Błąd pobierania zasobu:', error);
+    res.status(500).send('Wystąpił błąd podczas pobierania zasobu');
+  }
+});
+
+
 // Endpoint API do pobierania i zapisywania danych z RSS
 app.get('/api/scrape-rss', async (req, res) => {
   try {
