@@ -56,6 +56,9 @@ export default {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
+    getBaseUrl() {
+      return window.location.origin;
+    },
     async fetchFirstImage(link) {
       try {
         const response = await fetch(`http://localhost:3000/api/proxy?url=${encodeURIComponent(link)}`);
@@ -75,7 +78,8 @@ export default {
       }
     },
     replaceLocalhostWithDomain(url) {
-      return url.replace('http://localhost:3001', 'http://powiatsredzki.pl');
+      const baseUrl = this.getBaseUrl();
+      return url.replace(baseUrl, 'http://powiatsredzki.pl');
     },
     goToSource(link) {
       window.location.href = link;
