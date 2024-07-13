@@ -10,7 +10,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
-
+app.listen(PORT, () => {
+  console.log(`Serwer działa na http://localhost:${PORT}`);
+});
 // Połączenie z MongoDB
 mongoose.connect(MONGODB_URI)
     .then(() => {
