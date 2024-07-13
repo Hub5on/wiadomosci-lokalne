@@ -128,7 +128,7 @@ export default {
   .pub-date, .author {
     font-size: 0.8vw; /* Rozmiar czcionki w zależności od szerokości widoku */
   }
-  @media (max-width: 765px) { 
+  @media (max-width: 576px) { /* Na ekranach mniejszych niż 576px */
     .pub-date, .author {
       font-size: 3vw; /* Dostosuj rozmiar czcionki dla daty publikacji i autora */
     }
