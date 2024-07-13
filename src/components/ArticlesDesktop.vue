@@ -61,7 +61,8 @@ export default {
     },
     async fetchFirstImage(link) {
       try {
-        const response = await fetch(`/api/proxy?url=${encodeURIComponent(link)}`);
+        const baseUrl = getBaseUrl();
+        const response = await fetch(`${baseUrl}/api/proxy?url=${encodeURIComponent(link)}`);
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
