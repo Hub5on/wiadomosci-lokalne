@@ -2,7 +2,8 @@
   
   <NavbarDesktop v-if="isDesktop"/>
   <HeaderMobile v-else/>
-  <ArticlesMobile v-if="!isDesktop"/>
+  <ArticlesDesktop v-if="isDesktop"/>
+  <ArticlesMobile v-else/>
   <FooterDesktop v-if="isDesktop"/>
   <NavbarMobile v-else/>
 
@@ -10,6 +11,7 @@
 
 <script>
 import NavbarDesktop from './components/NavbarDesktop.vue'
+import ArticlesDesktop from './components/ArticlesDesktop.vue'
 import FooterDesktop from './components/FooterDesktop.vue'
 import HeaderMobile from './components/HeaderMobile.vue'
 import NavbarMobile from './components/NavbarMobile.vue'
@@ -20,6 +22,7 @@ export default {
   components: {
     //Desktop
     NavbarDesktop,
+    ArticlesDesktop,
     FooterDesktop,
     //Mobile
     HeaderMobile,
@@ -29,10 +32,12 @@ export default {
   data() {
     return {
       isDesktop: window.innerWidth >= 718,
+      title: 'Wiadomości lokalne'
     };
   },
   mounted() {
     window.addEventListener('resize', this.handleResize);
+    document.title = this.title;
   },
   unmounted() {
     window.removeEventListener('resize', this.handleResize);
@@ -40,6 +45,10 @@ export default {
   methods: {
     handleResize() {
       this.isDesktop = window.innerWidth > 718;
+    },
+    changeTitle(newTitle) {
+      this.title = newTitle;
+      document.title = newTitle;
     }
   }
 }
