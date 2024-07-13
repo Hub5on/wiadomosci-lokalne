@@ -44,7 +44,7 @@ export default {
   methods: {
     async fetchArticles() {
       try {
-        const response = await fetch('http://localhost:3000/api/articles');
+        const response = await fetch('/api/articles');
         const data = await response.json();
         this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
