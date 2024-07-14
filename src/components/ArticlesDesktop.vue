@@ -74,8 +74,10 @@ export default {
       }
     },
     replaceLocalhostWithDomain(url) {
-      const baseUrl = this.getBaseUrl();
-      return url.replace('localhost', baseUrl.replace(/^http[s]?:\/\//, ''));
+      const newDomain = 'powiatsredzki.pl';
+      const urlObj = new URL(url);
+      urlObj.hostname = newDomain;
+      return urlObj.toString();
     },
     goToSource(link) {
       window.location.href = link;
