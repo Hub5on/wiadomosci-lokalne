@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <ul class="list-group list-group-flush p-3">
+  <div class="content">
+    <ul class="list-group list-group-flush p-3 one-article">
       <li
         class="list-group-item list-group-item-action article-item"
         v-for="article in articles"
@@ -10,10 +10,14 @@
       >
         <img :src="article.imageUrl" alt="Article Image" v-if="article.imageUrl" class="img-fluid">
         <div class="article-text p-3">
-          
+          <div class="row">
             <div class="col-md-6">
               <p class="pub-date"><strong>Data publikacji:</strong> {{ formatDateTime(article.pubDate) }}</p>
             </div>
+            <div class="col-md-6">
+              <p class="author"><strong>Autor:</strong> {{ article.creator }}</p>
+            </div>
+          </div>
           <h2 class="mb-3">{{ article.title }}</h2>
           <p>{{ article.description }}</p>
         </div>
