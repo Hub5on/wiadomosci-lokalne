@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <ul class="list-group list-group-flush p-3">
+  <div class="content">
+    <ul class="list-group list-group-flush p-3 one-article">
       <li
         class="list-group-item list-group-item-action article-item"
         v-for="article in articles"
