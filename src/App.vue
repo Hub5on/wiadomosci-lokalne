@@ -1,32 +1,25 @@
 <template>
-  
-  <NavbarDesktop v-if="isDesktop"/>
-  <HeaderMobile v-else/>
-  <ArticlesDesktop v-if="isDesktop"/>
-  <ArticlesMobile v-else/>
-  <FooterDesktop v-if="isDesktop"/>
-  <NavbarMobile v-else/>
-
+  <div>
+    <NavbarDesktop v-if="isDesktop"/>
+    <HeaderMobile v-else/>
+    <router-view/> <!-- To miejsce, w którym renderowane są komponenty na podstawie trasy -->
+    <FooterDesktop v-if="isDesktop"/>
+    <NavbarMobile v-else/>
+  </div>
 </template>
 
 <script>
-import NavbarDesktop from './components/NavbarDesktop.vue'
-import ArticlesDesktop from './components/ArticlesDesktop.vue'
-import FooterDesktop from './components/FooterDesktop.vue'
-import HeaderMobile from './components/HeaderMobile.vue'
-import NavbarMobile from './components/NavbarMobile.vue'
-import ArticlesMobile from './components/ArticlesMobile.vue'
+import NavbarDesktop from './components/NavbarDesktop.vue';
+import FooterDesktop from './components/FooterDesktop.vue';
+import HeaderMobile from './components/HeaderMobile.vue';
+import NavbarMobile from './components/NavbarMobile.vue';
 
 export default {
   name: 'App',
   components: {
-    //Desktop
     NavbarDesktop,
-    ArticlesDesktop,
     FooterDesktop,
-    //Mobile
     HeaderMobile,
-    ArticlesMobile,
     NavbarMobile
   },
   data() {
@@ -44,7 +37,7 @@ export default {
   },
   methods: {
     handleResize() {
-      this.isDesktop = window.innerWidth > 768;
+      this.isDesktop = window.innerWidth >= 768;
     },
     changeTitle(newTitle) {
       this.title = newTitle;
@@ -56,7 +49,7 @@ export default {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
-body{
+body {
   font-family: 'Lato', sans-serif;
 }
 </style>
