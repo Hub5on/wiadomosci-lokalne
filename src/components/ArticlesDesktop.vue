@@ -8,7 +8,7 @@
         @click="goToSource(article.link)"
         style="cursor: pointer;"
       >
-        <img :src="article.imageUrl" alt="Article Image" v-if="article.imageUrl" class="img-fluid">
+        <img :src="article.imageUrl" alt="Article Image" v-if="article.imageUrl" :class="article.imageClass">
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
@@ -46,7 +46,9 @@ export default {
 
         await Promise.all(this.articles.map(async (article) => {
           const imageUrl = await this.fetchFirstImage(article.link);
-          article.imageUrl = this.replaceLocalhostWithDomain(imageUrl);
+          const { url, className } = await this.processImage(imageUrl);
+          article.imageUrl = this.replaceLocalhostWithDomain(url);
+          article.imageClass = className;
         }));
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
@@ -72,6 +74,30 @@ export default {
         console.error('Błąd pobierania obrazka:', error);
         return '';
       }
+    },
+    async processImage(imageUrl) {
+      if (!imageUrl) return { url: '', className: '' };
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+          const width = img.width;
+          const height = img.height;
+          let className = '';
+
+          if (width === height || height > width) {
+            className = 'img-square-or-tall';
+          } else {
+            className = 'img-wide';
+          }
+
+          resolve({ url: imageUrl, className });
+        };
+        img.onerror = () => {
+          resolve({ url: imageUrl, className: '' });
+        };
+      });
     },
     replaceLocalhostWithDomain(url) {
       const newDomain = 'powiatsredzki.pl';
@@ -112,6 +138,14 @@ export default {
   .article-item img {
     width: 100%;
     height: auto;
+    max-height: 50rem;
+  }
+  .img-square-or-tall {
+    object-fit: contain;
+    max-height: 50rem;
+  }
+  .img-wide {
+    object-fit: cover;
     max-height: 50rem;
   }
   .article-item {
