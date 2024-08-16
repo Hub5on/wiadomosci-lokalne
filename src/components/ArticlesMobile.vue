@@ -17,17 +17,13 @@
           <img v-lazy="'img/error.png'" alt="Error Image" class="error-image">
         </div>
         <div class="article-text p-3">
-          <div class="row">
-            <div class="col-md-6">
-              <p class="pub-date">
-                <strong>Data publikacji:</strong> {{ formatDateTime(article.pubDate) }}
-                <!-- Czerwony napis jeśli brak zdjęcia -->
-                <span v-if="article.imageError" class="text-danger"><strong>Strona usunięta</strong></span>
-              </p>
-            </div>
-            <div class="col-md-6">
-              <p class="author"><strong>Autor:</strong> {{ article.creator }}</p>
-            </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <p class="pub-date m-0">
+              <strong>Data publikacji:</strong> {{ formatDateTime(article.pubDate) }}
+              <!-- Czerwony napis jeśli brak zdjęcia -->
+              <span v-if="article.imageError" class="text-danger"><strong>Strona usunięta</strong></span>
+            </p>
+            <p class="author m-0"><strong>Autor:</strong> {{ article.creator }}</p>
           </div>
           <h2 class="mb-3">{{ article.title }}</h2>
           <p>{{ article.description }}</p>
@@ -191,5 +187,8 @@ export default {
     max-height: 25rem;
     object-fit: contain;
     background-color: #ffffff;
+  }
+  .author, .pub-date {
+    font-size: 0.7rem;
   }
 </style>
