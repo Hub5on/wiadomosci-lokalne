@@ -195,12 +195,12 @@ export default {
   .author {
     text-align: right;
   }
-  .pub-date, .author {
-    font-size: 0.8vw;
+  .author, .pub-date {
+    font-size: 1rem;
   }
   @media (max-width: 576px) {
     .pub-date, .author {
-      font-size: 3vw;
+      font-size: 0.8rem;
     }
   }
   .no-image-warning {
