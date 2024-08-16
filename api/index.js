@@ -41,18 +41,6 @@ function addZeroIfNeeded(num) {
 // Parser RSS
 const parser = new Parser();
 
-app.get('/api/proxy', async (req, res) => {
-  try {
-    const url = req.query.url;
-    const response = await fetch(url);
-    const data = await response.text();
-    res.send(data);
-  } catch (error) {
-    console.error('Błąd pobierania zasobu:', error);
-    res.status(500).send('Wystąpił błąd podczas pobierania zasobu');
-  }
-});
-
 
 // Endpoint API do pobierania i zapisywania danych z RSS
 app.get('/api/scrape-rss', async (req, res) => {
@@ -148,6 +136,20 @@ app.get('/api/articles', async (req, res) => {
       res.status(500).json({ message: 'Wystąpił błąd podczas pobierania artykułu' });
     }
   });
-  
+  app.get('/api/proxy', async (req, res) => {
+    try {
+      const url = req.query.url;
+      const response = await fetch(url);
+      const data = await response.text();
+      res.send(data);
+    } catch (error) {
+      console.error('Błąd pobierania zasobu:', error);
+      res.status(500).send('Wystąpił błąd podczas pobierania zasobu');
+    }
+  });
+  app.use((req, res, next) => {
+    console.log(`Received request for ${req.url}`);
+    next();
+  });
 
 module.exports = app;
