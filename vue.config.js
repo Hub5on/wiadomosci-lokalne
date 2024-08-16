@@ -5,13 +5,12 @@ module.exports = {
     'vuetify' 
   ],
   devServer: {
+    port: 3001,
     proxy: {
       '/api': {
         target: 'http://localhost:3000', // Adres Twojego serwera backendowego
         changeOrigin: true,
-        pathRewrite: {
-          '^/api': ''
-        }
+        
       }
     }
   }
