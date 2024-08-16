@@ -12,8 +12,10 @@ const app = createApp(App);
 
 
 app.use(VueLazyload, {
+  preLoad: 1.3,
   loading: '/img/loading.gif', 
-  error: '/img/error.png' 
+  error: '/img/error.png',
+  attempt: 1 
 });
 
 // Użyj routera
