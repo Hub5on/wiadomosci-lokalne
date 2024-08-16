@@ -1,5 +1,5 @@
 <template>
-  <div class="container mt-5">
+  <div class="container-parent mt-5">
     <div class="calendar-container">
       <FullCalendar :options="calendarOptions" />
     </div>
@@ -55,59 +55,22 @@ export default {
 </script>
 
 <style>
+.container-parent {
+  background-color: #f0f0f0; 
+  padding: 10px 0 0 0; 
+  min-height: 94vh; 
+}
+
 .calendar-container {
-  margin: 0 auto;
-  padding: 30px 40px 0 40px;
   max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: #fff; 
   font-family: 'Lato', sans-serif;
-}
-
-.fc-daygrid-day-top {
-  font-weight: bold;
-}
-
-.fc-daygrid-day-number {
-  font-size: 1.2em;
-}
-
-.fc-daygrid-day-content {
-  font-size: 0.9em;
-}
-
-.fc-toolbar-title {
-  font-size: 1.5em;
-  font-weight: 700;
-}
-
-.fc-button {
-  font-size: 0.9em;
-  border-radius: 4px;
-}
-
-.fc-button-primary {
-  border: none;
-  color: #fff;
-}
-
-.fc-button-primary:hover {
-  background-color: #0056b3;
-}
-
-.fc-daygrid-day-number {
-  color: #000;
-  text-decoration: none;
-}
-
-.fc-daygrid-day-content {
-  color: #000;
-  text-decoration: none;
-}
-
-.fc-col-header-cell-cushion {
-  text-decoration: none;
-  color: #000;
-}
-.fc-daygrid-week-number{
-  text-decoration: none;
+  border-radius: 8px; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  overflow: hidden; 
+  box-sizing: border-box; 
+  min-height: 820px; 
 }
 </style>
