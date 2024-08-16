@@ -131,9 +131,9 @@ export default {
       const newDomain = 'powiatsredzki.pl';
       const urlObj = new URL(url);
 
-      if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
+
         urlObj.hostname = newDomain;
-      }
+      
 
       urlObj.port = '';
 
