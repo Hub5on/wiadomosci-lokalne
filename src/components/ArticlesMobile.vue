@@ -189,6 +189,11 @@ export default {
     background-color: #ffffff;
   }
   .author, .pub-date {
-    font-size: 0.7rem;
+    font-size: 1rem;
+  }
+  @media (max-width: 576px) {
+    .pub-date, .author {
+      font-size: 0.8rem;
+    }
   }
 </style>
