@@ -100,43 +100,50 @@ export default {
       }
     },
     async processImage(imageUrl) {
-      if (!imageUrl) return { url: '', className: '' };
+  if (!imageUrl) return { url: '', className: '' };
+  const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
 
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.src = imageUrl;
-        img.onload = () => {
-          console.log('Processed image URL:', img.src); // Debugowanie
-          const width = img.width;
-          const height = img.height;
-          let className = '';
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = replacedUrl;
+    img.onload = () => {
+      const width = img.width;
+      const height = img.height;
+      let className = '';
 
-          if (width === height || height > width) {
-            className = 'img-square-or-tall';
-          } else {
-            className = 'img-wide';
-          }
+      if (width === height || height > width) {
+        className = 'img-square-or-tall';
+      } else {
+        className = 'img-wide';
+      }
 
-          resolve({ url: imageUrl, className });
-        };
-        img.onerror = () => {
-          console.error('Error loading image:', img.src); // Debugowanie
-          resolve({ url: imageUrl, className: 'img-error' });
-        };
-      });
-    },
+      resolve({ url: replacedUrl, className });
+    };
+    img.onerror = () => {
+      console.error('Error loading image:', replacedUrl); 
+      resolve({ url: replacedUrl, className: 'img-error' });
+    };
+  });
+}
+,
     replaceLocalhostWithDomain(url) {
-      const newDomain = 'powiatsredzki.pl';
-      const urlObj = new URL(url);
+  const targetDomain = 'powiatsredzki.pl'; 
+  let newUrl = url;
+  if (url.includes(window.location.hostname)) {
+    newUrl = url.replace(window.location.hostname, targetDomain);
+  }
 
+  // Tworzenie URL obiektu, aby manipulować jego elementami
+  const urlObj = new URL(newUrl);
 
-        urlObj.hostname = newDomain;
-      
+  // Usuń port, jeśli istnieje
+  urlObj.port = '';
 
-      urlObj.port = '';
+  const finalUrl = urlObj.toString();
+  
 
-      return urlObj.toString();
-    },
+  return finalUrl;
+},
     goToSource(link) {
       window.location.href = link;
     },
