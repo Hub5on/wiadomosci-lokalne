@@ -124,32 +124,37 @@ app.get('/api/articles', async (req, res) => {
   });
   
   // Endpoint zwracający pojedynczy artykuł na podstawie jego identyfikatora
-  app.get('/api/article/:id', async (req, res) => {
-    try {
-      const article = await Article.findById(req.params.id);
-      if (!article) {
-        return res.status(404).json({ message: 'Artykuł nie został znaleziony' });
-      }
-      res.json(article);
-    } catch (err) {
-      console.error('Błąd podczas pobierania artykułu:', err);
-      res.status(500).json({ message: 'Wystąpił błąd podczas pobierania artykułu' });
-    }
-  });
   app.get('/api/proxy', async (req, res) => {
     try {
-      const url = req.query.url;
-      const response = await fetch(url);
-      const data = await response.text();
-      res.send(data);
+        const url = req.query.url;
+        console.log('Received URL:', url); // Dodaj logowanie URL
+
+        if (!url || !url.startsWith('http')) {
+            console.log('Invalid URL:', url);
+            return res.status(400).json({ message: 'Invalid URL' });
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.error(`Error response from server: ${response.status} ${response.statusText}`);
+            // Zwróć domyślny obraz lub pustą odpowiedź zamiast błędu 404
+            if (response.status === 404) {
+                console.log(`Image not found at URL: ${url}`);
+                return res.send(''); // Zwróć pustą odpowiedź
+            }
+            return res.status(response.status).send(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.text();
+        res.send(data);
     } catch (error) {
-      console.error('Błąd pobierania zasobu:', error);
-      res.status(500).send('Wystąpił błąd podczas pobierania zasobu');
+        console.error('Error fetching resource:', error);
+        res.status(500).send('An error occurred while fetching the resource');
     }
-  });
-  app.use((req, res, next) => {
-    console.log(`Received request for ${req.url}`);
-    next();
-  });
+});
+
+
+
 
 module.exports = app;
