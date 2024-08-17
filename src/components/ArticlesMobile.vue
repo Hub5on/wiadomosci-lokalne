@@ -38,8 +38,7 @@ export default {
   name: 'ArticleList',
   data() {
     return {
-      articles: [],
-      imageCache: new Map()
+      articles: []
     };
   },
   created() {
@@ -54,7 +53,7 @@ export default {
 
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
-          article.loadingImageUrl = 'path/to/loading/image.jpg'; // Placeholder image URL
+          article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
           const imageUrl = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
@@ -79,10 +78,6 @@ export default {
       return window.location.origin;
     },
     async fetchFirstImage(link) {
-      if (this.imageCache.has(link)) {
-        return this.imageCache.get(link);
-      }
-
       try {
         const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
         const html = await response.text();
@@ -91,11 +86,8 @@ export default {
         const imgElement = doc.querySelector('.container-subpage img');
 
         if (imgElement) {
-          const imageUrl = imgElement.src;
-          this.imageCache.set(link, imageUrl);
-          return imageUrl;
+          return imgElement.src;
         } else {
-          console.warn('No image found for URL:', link);
           return '';
         }
       } catch (error) {
@@ -104,36 +96,50 @@ export default {
       }
     },
     async processImage(imageUrl) {
-      if (!imageUrl) return { url: '', className: '' };
+  if (!imageUrl) return { url: '', className: '' };
+  const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
 
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.src = imageUrl;
-        img.onload = () => {
-          const width = img.width;
-          const height = img.height;
-          let className = '';
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = replacedUrl;
+    img.onload = () => {
+      const width = img.width;
+      const height = img.height;
+      let className = '';
 
-          if (width === height || height > width) {
-            className = 'img-square-or-tall';
-          } else {
-            className = 'img-wide';
-          }
+      if (width === height || height > width) {
+        className = 'img-square-or-tall';
+      } else {
+        className = 'img-wide';
+      }
 
-          resolve({ url: imageUrl, className });
-        };
-        img.onerror = () => {
-          resolve({ url: imageUrl, className: 'img-error' });
-        };
-      });
-    },
+      resolve({ url: replacedUrl, className });
+    };
+    img.onerror = () => {
+      console.error('Error loading image:', replacedUrl); 
+      resolve({ url: replacedUrl, className: 'img-error' });
+    };
+  });
+}
+,
     replaceLocalhostWithDomain(url) {
-      const newDomain = 'powiatsredzki.pl';
-      const urlObj = new URL(url);
-      urlObj.hostname = newDomain;
-      urlObj.port = '';
-      return urlObj.toString();
-    },
+  const targetDomain = 'powiatsredzki.pl'; 
+  let newUrl = url;
+  if (url.includes(window.location.hostname)) {
+    newUrl = url.replace(window.location.hostname, targetDomain);
+  }
+
+  // Tworzenie URL obiektu, aby manipulować jego elementami
+  const urlObj = new URL(newUrl);
+
+  // Usuń port, jeśli istnieje
+  urlObj.port = '';
+
+  const finalUrl = urlObj.toString();
+  
+
+  return finalUrl;
+},
     goToSource(link) {
       window.location.href = link;
     },
