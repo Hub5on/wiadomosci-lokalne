@@ -57,7 +57,7 @@ export default {
 
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
-          article.loadingImageUrl = 'path/to/loading/image.jpg'; // Placeholder image URL
+          article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
           const imageUrl = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
@@ -90,10 +90,8 @@ export default {
         const imgElement = doc.querySelector('.container-subpage img');
 
         if (imgElement) {
-          console.log('Fetched image URL:', imgElement.src); // Debugowanie
           return imgElement.src;
         } else {
-          console.warn('No image found for URL:', link); // Debugowanie
           return '';
         }
       } catch (error) {
