@@ -123,25 +123,19 @@ app.get('/api/articles', async (req, res) => {
     }
   });
   
-  // Endpoint zwracający pojedynczy artykuł na podstawie jego identyfikatora
   app.get('/api/proxy', async (req, res) => {
     try {
         const url = req.query.url;
-        console.log('Received URL:', url); // Dodaj logowanie URL
 
         if (!url || !url.startsWith('http')) {
-            console.log('Invalid URL:', url);
             return res.status(400).json({ message: 'Invalid URL' });
         }
 
         const response = await fetch(url);
 
         if (!response.ok) {
-            console.error(`Error response from server: ${response.status} ${response.statusText}`);
-            // Zwróć domyślny obraz lub pustą odpowiedź zamiast błędu 404
             if (response.status === 404) {
-                console.log(`Image not found at URL: ${url}`);
-                return res.send(''); // Zwróć pustą odpowiedź
+                return res.send('');
             }
             return res.status(response.status).send(`Error: ${response.statusText}`);
         }
