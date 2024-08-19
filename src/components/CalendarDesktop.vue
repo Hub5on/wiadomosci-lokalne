@@ -1,5 +1,5 @@
 <template>
-  <div class="container-parent mt-5">
+  <div class="container-parent">
     <div class="calendar-container">
       <FullCalendar :options="calendarOptions" />
     </div>
@@ -57,8 +57,8 @@ export default {
 <style>
 .container-parent {
   background-color: #f0f0f0; 
-  padding: 10px 0 0 0; 
-  min-height: 94vh; 
+  padding: 5px 0 0 0; 
+  min-height: 92vh; 
 }
 
 .calendar-container {

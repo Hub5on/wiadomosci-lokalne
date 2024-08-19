@@ -184,7 +184,6 @@ export default {
 
 <style>
   .content {
-    margin-top: 40px;
     padding: 0 25%;
     background-color: #f0f0f0;
   }
