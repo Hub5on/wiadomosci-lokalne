@@ -51,6 +51,10 @@ export default {
   methods: {
     async fetchArticles() {
       try {
+        // Wywołanie funkcji scrapeRss przed pobraniem artykułów
+        await this.scrapeRss();
+        
+        // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
         const data = await response.json();
         this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -78,9 +82,24 @@ export default {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
+    
+    async scrapeRss() {
+      try {
+        const response = await fetch(`${this.getBaseUrl()}/api/scrape-rss`);
+        if (!response.ok) {
+          throw new Error('Nie udało się pobrać danych RSS');
+        }
+        const result = await response.json();
+        console.log('Dane RSS:', result); // Możesz dostosować sposób obsługi danych RSS według własnych potrzeb
+      } catch (error) {
+        console.error('Błąd pobierania danych RSS:', error);
+      }
+    },
+    
     getBaseUrl() {
       return window.location.origin;
     },
+    
     async fetchFirstImage(link) {
       try {
         const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
@@ -99,63 +118,66 @@ export default {
         return '';
       }
     },
+    
     async processImage(imageUrl) {
-  if (!imageUrl) return { url: '', className: '' };
-  const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
+      if (!imageUrl) return { url: '', className: '' };
+      const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
 
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = replacedUrl;
-    img.onload = () => {
-      const width = img.width;
-      const height = img.height;
-      let className = '';
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = replacedUrl;
+        img.onload = () => {
+          const width = img.width;
+          const height = img.height;
+          let className = '';
 
-      if (width === height || height > width) {
-        className = 'img-square-or-tall';
-      } else {
-        className = 'img-wide';
+          if (width === height || height > width) {
+            className = 'img-square-or-tall';
+          } else {
+            className = 'img-wide';
+          }
+
+          resolve({ url: replacedUrl, className });
+        };
+        img.onerror = () => {
+          console.error('Error loading image:', replacedUrl); 
+          resolve({ url: replacedUrl, className: 'img-error' });
+        };
+      });
+    },
+    
+    replaceLocalhostWithDomain(url) {
+      const targetDomain = 'powiatsredzki.pl'; 
+      let newUrl = url;
+      if (url.includes(window.location.hostname)) {
+        newUrl = url.replace(window.location.hostname, targetDomain);
       }
 
-      resolve({ url: replacedUrl, className });
-    };
-    img.onerror = () => {
-      console.error('Error loading image:', replacedUrl); 
-      resolve({ url: replacedUrl, className: 'img-error' });
-    };
-  });
-}
-,
-    replaceLocalhostWithDomain(url) {
-  const targetDomain = 'powiatsredzki.pl'; 
-  let newUrl = url;
-  if (url.includes(window.location.hostname)) {
-    newUrl = url.replace(window.location.hostname, targetDomain);
-  }
+      // Tworzenie URL obiektu, aby manipulować jego elementami
+      const urlObj = new URL(newUrl);
 
-  // Tworzenie URL obiektu, aby manipulować jego elementami
-  const urlObj = new URL(newUrl);
+      // Usuń port, jeśli istnieje
+      urlObj.port = '';
 
-  // Usuń port, jeśli istnieje
-  urlObj.port = '';
-
-  const finalUrl = urlObj.toString();
-  
-
-  return finalUrl;
-},
+      const finalUrl = urlObj.toString();
+      
+      return finalUrl;
+    },
+    
     goToSource(link) {
       window.location.href = link;
     },
+    
     formatDateTime(dateTime) {
       const date = new Date(dateTime);
       const formattedDate = `${this.addZeroIfNeeded(date.getDate())}/${this.addZeroIfNeeded(date.getMonth() + 1)}/${date.getFullYear()}`;
       const formattedTime = `${this.addZeroIfNeeded(date.getHours())}:${this.addZeroIfNeeded(date.getMinutes())}`;
       return `${formattedDate} ${formattedTime}`;
     },
+    
     addZeroIfNeeded(num) {
       return num < 10 ? '0' + num : num;
-    }
+    },
   }
 };
 </script>
