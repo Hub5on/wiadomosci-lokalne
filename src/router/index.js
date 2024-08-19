@@ -9,7 +9,7 @@ const routes = [
     component: HomePage
   },
   {
-    path: '/calendar',
+    path: '/kalendarz',
     name: 'CalendarPage',
     component: CalendarPage
   }
