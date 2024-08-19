@@ -17,10 +17,10 @@
       <div :class="['collapse', 'navbar-collapse', { show: isNavbarCollapsed }]" id="navbarNavAltMarkup">
         <ul class="navbar-nav mx-auto justify-content-end me-5">
           <li class="nav-item">
-            <router-link class="nav-link me-4" to="/" exact-active-class="fw-bold active" active-class="fw-bold active">Aktualności</router-link>
+            <router-link class="nav-link" to="/" exact-active-class="fw-bold active" active-class="fw-bold active">Aktualności</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link me-4" to="/calendar" exact-active-class="fw-bold active" active-class="fw-bold active">Kalendarz</router-link>
+            <router-link class="nav-link" to="/calendar" exact-active-class="fw-bold active" active-class="fw-bold active">Kalendarz</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/ustawienia" exact-active-class="fw-bold active" active-class="fw-bold active">Ustawienia</router-link>
