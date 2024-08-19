@@ -2,7 +2,7 @@
   <div class="content">
     <ul class="list-group list-group-flush p-3 one-article">
       <li
-        class="list-group-item list-group-item-action article-item"
+        class="list-group-item list-group-item-action article-item rounded-3"
         v-for="article in articles"
         :key="article._id"
         @click="goToSource(article.link)"
@@ -188,7 +188,7 @@ export default {
     background-color: #f0f0f0;
   }
   .one-article li {
-    padding: 0;
+    padding-top: 15px;
     margin-bottom: 25px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #fff;
@@ -211,9 +211,6 @@ export default {
     object-fit: contain; /* Zmienione na contain */
     max-height: 30rem;
     background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
-  }
-  .article-item {
-    border-radius: 15px;
   }
   .article-text {
     padding: 5%;
