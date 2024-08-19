@@ -2,7 +2,7 @@
   <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light shadow-sm">
     <div class="container-fluid">
       <router-link class="navbar-brand ms-5" to="/">
-        <img src="/img/icons/favicon-32x32.png" alt="Logo">Wiadomości Lokalne
+        <img src="/img/icons/favicon-32x32.png" alt="Logo" class="me-2">Wiadomości Lokalne
       </router-link>
       <button
         class="navbar-toggler me-5"
@@ -20,7 +20,7 @@
             <router-link class="nav-link" to="/" exact-active-class="fw-bold active" active-class="fw-bold active">Aktualności</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/calendar" exact-active-class="fw-bold active" active-class="fw-bold active">Kalendarz</router-link>
+            <router-link class="nav-link" to="/kalendarz" exact-active-class="fw-bold active" active-class="fw-bold active">Kalendarz</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/ustawienia" exact-active-class="fw-bold active" active-class="fw-bold active">Ustawienia</router-link>
@@ -102,7 +102,9 @@ export default {
 .navbar{
   box-shadow: 0 4px 8px gray;
 }
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
 </style>
-
-
-
