@@ -9,14 +9,17 @@
         style="cursor: pointer;"
       >
         <!-- Placeholder podczas ładowania -->
-        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading && !article.imageError && !article.isPageDeleted" class="loading-image">
-        <!-- Obrazek artykułu lub placeholder -->
-        <img v-lazy="article.imageUrl" alt="Article Image" v-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
+        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
+
+        <!-- Obrazek artykułu lub placeholder albo komunikat o błędzie -->
+        <img v-lazy="article.imageUrl" alt="Article Image" v-else-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
+        
         <!-- Komunikat o błędzie strony -->
-        <div v-if="article.isPageDeleted" class="no-image-warning">
+        <div v-else class="no-image-warning">
           <img v-lazy="'/img/error.png'" alt="Error Image" class="error-image">
           <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
+        
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
@@ -35,6 +38,7 @@
     </ul>
   </div>
 </template>
+
 
 
 
@@ -64,28 +68,28 @@ export default {
         await Promise.all(this.articles.map(async (article) => {
           article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
           article.isLoading = true; // Flaga, że obrazek jest ładowany
+          
           const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
-          // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
           if (isPageDeleted) {
             article.isPageDeleted = true;
-            article.imageUrl = ''; // Resetujemy imageUrl, bo strona jest usunięta
+            article.imageUrl = ''; // Nie ustawiamy obrazka, strona jest usunięta
             article.imageClass = '';
-            article.imageError = true; // Ustawiamy na error
+            article.imageError = true;
           } else if (!url) {
-            // Brak obrazka, ustaw placeholder
+            // Brak obrazka, ustawiamy placeholder
             article.imageUrl = '/img/temp.png';
             article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
-            article.imageError = false; // Brak błędu, tylko placeholder
+            article.imageError = false;
           } else {
-            // Jest obrazek, przypisujemy prawidłowy URL
+            // Poprawny obrazek, przypisujemy prawidłowy URL
             article.imageUrl = url;
             article.imageClass = className;
             article.imageError = false;
           }
 
-          // Przestań wyświetlać animację ładowania
+          // Zakończenie ładowania obrazka
           article.isLoading = false;
         }));
 
@@ -102,8 +106,7 @@ export default {
         const doc = parser.parseFromString(html, 'text/html');
 
         // Sprawdzenie, czy na stronie znajduje się komunikat o błędzie
-        const isPageDeleted = !!doc.querySelector('.text-wrapper h1')?.textContent.includes('Strona błędu') ||
-                              !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
+        const isPageDeleted = !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
 
         // Pobranie obrazka
         const imgElement = doc.querySelector('.container-subpage img');
@@ -194,6 +197,7 @@ export default {
     },
   }
 };
+
 </script>
 
 
