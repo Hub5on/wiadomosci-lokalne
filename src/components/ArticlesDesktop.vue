@@ -15,11 +15,11 @@
         <img v-lazy="article.imageUrl" alt="Article Image" v-else-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
         
         <!-- Komunikat o błędzie strony -->
-        <div v-else class="no-image-warning">
+        <div v-else-if="article.isPageDeleted" class="no-image-warning">
           <img v-lazy="'/img/error.png'" alt="Error Image" class="error-image">
           <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
-        
+
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
@@ -38,6 +38,7 @@
     </ul>
   </div>
 </template>
+
 
 
 
@@ -79,7 +80,7 @@ export default {
             article.imageError = true;
           } else if (!url) {
             // Brak obrazka, ustawiamy placeholder
-            article.imageUrl = '/img/temp.jpg';
+            article.imageUrl = '/img/temp.png';
             article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
             article.imageError = false;
           } else {
@@ -106,7 +107,7 @@ export default {
         const doc = parser.parseFromString(html, 'text/html');
 
         // Sprawdzenie, czy na stronie znajduje się komunikat o błędzie
-        const isPageDeleted = !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
+        const isPageDeleted = doc.body.textContent.includes('Podany adres jest nieprawidłowy');
 
         // Pobranie obrazka
         const imgElement = doc.querySelector('.container-subpage img');
@@ -197,6 +198,7 @@ export default {
     },
   }
 };
+
 
 </script>
 
