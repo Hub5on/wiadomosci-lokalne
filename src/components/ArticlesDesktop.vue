@@ -12,7 +12,7 @@
         <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="!article.imageUrl && !article.imageError" class="loading-image">
         <!-- Obrazek artykułu -->
         <img v-lazy="article.imageUrl" alt="Article Image" v-if="article.imageUrl" :class="article.imageClass">
-        <!-- Komunikat o błędzie -->
+        <!-- Komunikat o błędzie strony -->
         <div v-if="article.isPageDeleted" class="no-image-warning">
           <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
@@ -36,6 +36,7 @@
 </template>
 
 
+
 <script>
 export default {
   name: 'ArticleList',
@@ -50,21 +51,27 @@ export default {
   methods: {
     async fetchArticles() {
       try {
+        // Wywołanie funkcji scrapeRss przed pobraniem artykułów
         await this.scrapeRss();
+        
+        // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
         const data = await response.json();
         this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
+        // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
-          article.loadingImageUrl = '/img/loading.gif';
+          article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
           const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
+          // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
           if (url) {
             article.imageUrl = this.replaceLocalhostWithDomain(url);
             article.imageClass = className;
             article.imageError = false;
           } else {
+            // W przeciwnym razie ustaw URL i klasę jako puste
             article.imageUrl = '';
             article.imageClass = '';
             article.imageError = false; // Brak obrazu nie oznacza błędu
@@ -102,6 +109,23 @@ export default {
         console.error('Error fetching image:', error);
         return { imageUrl: '', isPageDeleted: false };
       }
+    },
+    
+    async scrapeRss() {
+      try {
+        const response = await fetch(`${this.getBaseUrl()}/api/scrape-rss`);
+        if (!response.ok) {
+          throw new Error('Nie udało się pobrać danych RSS');
+        }
+        const result = await response.json();
+        console.log('Dane RSS:', result);
+      } catch (error) {
+        console.error('Błąd pobierania danych RSS:', error);
+      }
+    },
+    
+    getBaseUrl() {
+      return window.location.origin;
     },
     
     async processImage(imageUrl) {
@@ -166,6 +190,7 @@ export default {
   }
 };
 </script>
+
 
 <style>
   .content {
