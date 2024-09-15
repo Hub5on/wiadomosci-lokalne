@@ -9,11 +9,12 @@
         style="cursor: pointer;"
       >
         <!-- Placeholder podczas ładowania -->
-        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="!article.imageUrl && !article.imageError" class="loading-image">
-        <!-- Obrazek artykułu -->
-        <img v-lazy="article.imageUrl" alt="Article Image" v-if="article.imageUrl" :class="article.imageClass">
+        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading && !article.imageError && !article.isPageDeleted" class="loading-image">
+        <!-- Obrazek artykułu lub placeholder -->
+        <img v-lazy="article.imageUrl" alt="Article Image" v-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
         <!-- Komunikat o błędzie strony -->
         <div v-if="article.isPageDeleted" class="no-image-warning">
+          <img v-lazy="'/img/error.png'" alt="Error Image" class="error-image">
           <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
         <div class="article-text p-3">
@@ -53,7 +54,7 @@ export default {
       try {
         // Wywołanie funkcji scrapeRss przed pobraniem artykułów
         await this.scrapeRss();
-        
+
         // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
         const data = await response.json();
@@ -62,41 +63,48 @@ export default {
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
           article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
+          article.isLoading = true; // Flaga, że obrazek jest ładowany
           const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
           // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
-          if (url) {
-            article.imageUrl = this.replaceLocalhostWithDomain(url);
+          if (isPageDeleted) {
+            article.isPageDeleted = true;
+            article.imageUrl = ''; // Resetujemy imageUrl, bo strona jest usunięta
+            article.imageClass = '';
+            article.imageError = true; // Ustawiamy na error
+          } else if (!url) {
+            // Brak obrazka, ustaw placeholder
+            article.imageUrl = '/img/temp.png';
+            article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
+            article.imageError = false; // Brak błędu, tylko placeholder
+          } else {
+            // Jest obrazek, przypisujemy prawidłowy URL
+            article.imageUrl = url;
             article.imageClass = className;
             article.imageError = false;
-          } else {
-            // W przeciwnym razie ustaw URL i klasę jako puste
-            article.imageUrl = '';
-            article.imageClass = '';
-            article.imageError = false; // Brak obrazu nie oznacza błędu
           }
 
-          // Ustawienie flagi, jeśli strona jest usunięta
-          article.isPageDeleted = isPageDeleted;
+          // Przestań wyświetlać animację ładowania
+          article.isLoading = false;
         }));
 
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
-    
+
     async fetchFirstImage(link) {
       try {
         const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        
+
         // Sprawdzenie, czy na stronie znajduje się komunikat o błędzie
-        const isPageDeleted = !!doc.querySelector('.text-wrapper h1')?.textContent.includes('Strona błędu') || 
+        const isPageDeleted = !!doc.querySelector('.text-wrapper h1')?.textContent.includes('Strona błędu') ||
                               !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
-        
+
         // Pobranie obrazka
         const imgElement = doc.querySelector('.container-subpage img');
 
@@ -110,7 +118,7 @@ export default {
         return { imageUrl: '', isPageDeleted: false };
       }
     },
-    
+
     async scrapeRss() {
       try {
         const response = await fetch(`${this.getBaseUrl()}/api/scrape-rss`);
@@ -123,11 +131,11 @@ export default {
         console.error('Błąd pobierania danych RSS:', error);
       }
     },
-    
+
     getBaseUrl() {
       return window.location.origin;
     },
-    
+
     async processImage(imageUrl) {
       if (!imageUrl) return { url: '', className: '' };
       const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
@@ -149,47 +157,45 @@ export default {
           resolve({ url: replacedUrl, className });
         };
         img.onerror = () => {
-          console.error('Error loading image:', replacedUrl); 
-          resolve({ url: replacedUrl, className: 'img-error' });
+          console.error('Error loading image:', replacedUrl);
+          resolve({ url: '', className: 'img-error' });
         };
       });
     },
-    
+
     replaceLocalhostWithDomain(url) {
-      const targetDomain = 'powiatsredzki.pl'; 
+      const targetDomain = 'powiatsredzki.pl';
       let newUrl = url;
       if (url.includes(window.location.hostname)) {
         newUrl = url.replace(window.location.hostname, targetDomain);
       }
 
-      // Tworzenie URL obiektu, aby manipulować jego elementami
       const urlObj = new URL(newUrl);
 
       // Usuń port, jeśli istnieje
       urlObj.port = '';
 
-      const finalUrl = urlObj.toString();
-      
-      return finalUrl;
+      return urlObj.toString();
     },
-    
+
     goToSource(link) {
       window.location.href = link;
     },
-    
+
     formatDateTime(dateTime) {
       const date = new Date(dateTime);
       const formattedDate = `${this.addZeroIfNeeded(date.getDate())}/${this.addZeroIfNeeded(date.getMonth() + 1)}/${date.getFullYear()}`;
       const formattedTime = `${this.addZeroIfNeeded(date.getHours())}:${this.addZeroIfNeeded(date.getMinutes())}`;
       return `${formattedDate} ${formattedTime}`;
     },
-    
+
     addZeroIfNeeded(num) {
       return num < 10 ? '0' + num : num;
     },
   }
 };
 </script>
+
 
 
 <style>
