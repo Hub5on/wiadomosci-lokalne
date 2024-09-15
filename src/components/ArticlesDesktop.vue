@@ -8,15 +8,21 @@
         @click="goToSource(article.link)"
         style="cursor: pointer;"
       >
-        <!-- Placeholder podczas ładowania -->
-        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading && !article.imageError && !article.isPageDeleted" class="loading-image">
+        <!-- Wyświetlanie loading.gif podczas ładowania -->
+        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
+
         <!-- Obrazek artykułu lub placeholder -->
-        <img v-lazy="article.imageUrl" alt="Article Image" v-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
+        <img v-lazy="article.imageUrl" alt="Article Image" v-if="!article.isLoading && !article.imageError && !article.isPageDeleted" :class="article.imageClass">
+
         <!-- Komunikat o błędzie strony -->
-        <div v-if="article.isPageDeleted" class="no-image-warning">
+        <div v-if="!article.isLoading && article.isPageDeleted" class="no-image-warning">
           <img v-lazy="'/img/error.png'" alt="Error Image" class="error-image">
           <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
+
+        <!-- Komunikat o braku obrazka (wstawiamy error.png zamiast zdjęcia) -->
+        <img v-lazy="'/img/error.png'" alt="Error Image" v-if="!article.isLoading && article.imageError && !article.isPageDeleted" class="error-image">
+
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
@@ -36,8 +42,6 @@
   </div>
 </template>
 
-
-
 <script>
 export default {
   name: 'ArticleList',
@@ -54,7 +58,7 @@ export default {
       try {
         // Wywołanie funkcji scrapeRss przed pobraniem artykułów
         await this.scrapeRss();
-
+        
         // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
         const data = await response.json();
@@ -62,31 +66,32 @@ export default {
 
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
+          article.isLoading = true;
           article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
-          article.isLoading = true; // Flaga, że obrazek jest ładowany
-          const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
-          const { url, className } = await this.processImage(imageUrl);
+          
+          const pageContent = await this.fetchPageContent(article.link);
 
-          // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
-          if (isPageDeleted) {
+          if (this.isPageDeleted(pageContent)) {
             article.isPageDeleted = true;
-            article.imageUrl = ''; // Resetujemy imageUrl, bo strona jest usunięta
-            article.imageClass = '';
-            article.imageError = true; // Ustawiamy na error
-          } else if (!url) {
-            // Brak obrazka, ustaw placeholder
-            article.imageUrl = '/img/temp.png';
-            article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
-            article.imageError = false; // Brak błędu, tylko placeholder
+            article.isLoading = false;
+            article.imageError = true;
+            article.imageUrl = '';
           } else {
-            // Jest obrazek, przypisujemy prawidłowy URL
-            article.imageUrl = url;
-            article.imageClass = className;
-            article.imageError = false;
-          }
+            const imageUrl = await this.fetchFirstImage(pageContent);
+            const { url, className } = await this.processImage(imageUrl);
+            article.isLoading = false;
 
-          // Przestań wyświetlać animację ładowania
-          article.isLoading = false;
+            if (url) {
+              article.imageUrl = this.replaceLocalhostWithDomain(url);
+              article.imageClass = className;
+              article.imageError = false;
+            } else {
+              // Jeśli brak obrazka, wstaw temp.png
+              article.imageUrl = '/img/temp.png';
+              article.imageClass = '';
+              article.imageError = false;
+            }
+          }
         }));
 
       } catch (error) {
@@ -94,46 +99,31 @@ export default {
       }
     },
 
-    async fetchFirstImage(link) {
+    async fetchPageContent(link) {
       try {
         const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-
-        // Sprawdzenie, czy na stronie znajduje się komunikat o błędzie
-        const isPageDeleted = !!doc.querySelector('.text-wrapper h1')?.textContent.includes('Strona błędu') ||
-                              !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
-
-        // Pobranie obrazka
-        const imgElement = doc.querySelector('.container-subpage img');
-
-        if (imgElement) {
-          return { imageUrl: imgElement.src, isPageDeleted };
-        } else {
-          return { imageUrl: '', isPageDeleted };
-        }
+        return await response.text();
       } catch (error) {
-        console.error('Error fetching image:', error);
-        return { imageUrl: '', isPageDeleted: false };
+        console.error('Błąd pobierania strony:', error);
+        return '';
       }
     },
 
-    async scrapeRss() {
-      try {
-        const response = await fetch(`${this.getBaseUrl()}/api/scrape-rss`);
-        if (!response.ok) {
-          throw new Error('Nie udało się pobrać danych RSS');
-        }
-        const result = await response.json();
-        console.log('Dane RSS:', result);
-      } catch (error) {
-        console.error('Błąd pobierania danych RSS:', error);
-      }
+    isPageDeleted(pageContent) {
+      // Sprawdzenie czy strona zawiera komunikat błędu
+      return pageContent.includes('Podany adres jest nieprawidłowy');
     },
 
-    getBaseUrl() {
-      return window.location.origin;
+    async fetchFirstImage(pageContent) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(pageContent, 'text/html');
+      const imgElement = doc.querySelector('.container-subpage img');
+
+      if (imgElement) {
+        return imgElement.src;
+      } else {
+        return ''; // Brak obrazka na stronie
+      }
     },
 
     async processImage(imageUrl) {
@@ -157,19 +147,20 @@ export default {
           resolve({ url: replacedUrl, className });
         };
         img.onerror = () => {
-          console.error('Error loading image:', replacedUrl);
-          resolve({ url: '', className: 'img-error' });
+          console.error('Error loading image:', replacedUrl); 
+          resolve({ url: replacedUrl, className: 'img-error' });
         };
       });
     },
 
     replaceLocalhostWithDomain(url) {
-      const targetDomain = 'powiatsredzki.pl';
+      const targetDomain = 'powiatsredzki.pl'; 
       let newUrl = url;
       if (url.includes(window.location.hostname)) {
         newUrl = url.replace(window.location.hostname, targetDomain);
       }
 
+      // Tworzenie URL obiektu, aby manipulować jego elementami
       const urlObj = new URL(newUrl);
 
       // Usuń port, jeśli istnieje
@@ -196,8 +187,6 @@ export default {
 };
 </script>
 
-
-
 <style>
   .content {
     padding: 0 25%;
@@ -215,18 +204,18 @@ export default {
     width: 100%;
     height: auto;
     max-height: 30rem;
-    object-fit: contain; /* Zmienione na contain */
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
+    object-fit: contain;
+    background-color: #ffffff;
   }
   .img-square-or-tall {
-    object-fit: contain; /* Zmienione na contain */
+    object-fit: contain;
     max-height: 30rem;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
+    background-color: #ffffff;
   }
   .img-wide {
-    object-fit: contain; /* Zmienione na contain */
+    object-fit: contain;
     max-height: 30rem;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
+    background-color: #ffffff;
   }
   .article-text {
     padding: 5%;
@@ -253,13 +242,13 @@ export default {
     height: auto;
     max-height: 30rem;
     object-fit: contain;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
+    background-color: #ffffff;
   }
   .error-image {
     width: 50%;
     height: auto;
     max-height: 25rem;
     object-fit: contain;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
+    background-color: #ffffff;
   }
 </style>
