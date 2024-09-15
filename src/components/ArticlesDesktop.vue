@@ -63,10 +63,10 @@ export default {
         await Promise.all(this.articles.map(async (article) => {
           article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
           const imageUrl = await this.fetchFirstImage(article.link);
-          const { url, className } = await this.processImage(imageUrl);
+          const { url, className, isErrorPage } = await this.processImage(imageUrl);
 
           // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
-          if (url) {
+          if (url && !isErrorPage) {
             article.imageUrl = this.replaceLocalhostWithDomain(url);
             article.imageClass = className;
             article.imageError = false;
@@ -107,20 +107,25 @@ export default {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const imgElement = doc.querySelector('.container-subpage img');
+        const errorElement = doc.querySelector('.text-wrapper h1');
+
+        if (errorElement && errorElement.textContent.includes('Strona błędu')) {
+          return { imageUrl: '', isErrorPage: true };
+        }
 
         if (imgElement) {
-          return imgElement.src;
+          return { imageUrl: imgElement.src, isErrorPage: false };
         } else {
-          return '';
+          return { imageUrl: '', isErrorPage: false };
         }
       } catch (error) {
         console.error('Error fetching image:', error);
-        return '';
+        return { imageUrl: '', isErrorPage: false };
       }
     },
     
     async processImage(imageUrl) {
-      if (!imageUrl) return { url: '', className: '' };
+      if (!imageUrl) return { url: '', className: '', isErrorPage: false };
       const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
 
       return new Promise((resolve) => {
@@ -137,11 +142,11 @@ export default {
             className = 'img-wide';
           }
 
-          resolve({ url: replacedUrl, className });
+          resolve({ url: replacedUrl, className, isErrorPage: false });
         };
         img.onerror = () => {
           console.error('Error loading image:', replacedUrl); 
-          resolve({ url: replacedUrl, className: 'img-error' });
+          resolve({ url: replacedUrl, className: 'img-error', isErrorPage: false });
         };
       });
     },
