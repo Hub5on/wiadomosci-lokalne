@@ -71,8 +71,8 @@ export default {
 
           if (isPageDeleted) {
             article.isPageDeleted = true;
-            article.imageUrl = ''; // Nie ustawiamy obrazka, strona jest usunięta
-            article.imageClass = '';
+            article.imageUrl = '/img/error.png'; // Nie ustawiamy obrazka, strona jest usunięta
+            article.imageClass = 'img-wide';
             article.imageError = true;
           } else if (!url) {
             // Brak obrazka, ustawiamy placeholder
