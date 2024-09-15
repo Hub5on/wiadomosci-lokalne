@@ -13,16 +13,14 @@
         <!-- Obrazek artykułu -->
         <img v-lazy="article.imageUrl" alt="Article Image" v-if="article.imageUrl" :class="article.imageClass">
         <!-- Komunikat o błędzie -->
-        <div v-if="article.imageError" class="no-image-warning">
-          <img v-lazy="'img/error.png'" alt="Error Image" class="error-image">
+        <div v-if="article.isPageDeleted" class="no-image-warning">
+          <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
               <p class="pub-date">
                 <strong>Data publikacji:</strong> {{ formatDateTime(article.pubDate) }}
-                <!-- Czerwony napis jeśli brak zdjęcia -->
-                <span v-if="article.imageError" class="text-danger"><strong>Strona usunięta</strong></span>
               </p>
             </div>
             <div class="col-md-6">
@@ -36,6 +34,7 @@
     </ul>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -51,53 +50,33 @@ export default {
   methods: {
     async fetchArticles() {
       try {
-        // Wywołanie funkcji scrapeRss przed pobraniem artykułów
         await this.scrapeRss();
-        
-        // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
         const data = await response.json();
         this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-        // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
-          article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
-          const imageUrl = await this.fetchFirstImage(article.link);
-          const { url, className, isErrorPage } = await this.processImage(imageUrl);
+          article.loadingImageUrl = '/img/loading.gif';
+          const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
+          const { url, className } = await this.processImage(imageUrl);
 
-          // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
-          if (url && !isErrorPage) {
+          if (url) {
             article.imageUrl = this.replaceLocalhostWithDomain(url);
             article.imageClass = className;
             article.imageError = false;
           } else {
-            // W przeciwnym razie ustaw URL i klasę jako puste
             article.imageUrl = '';
             article.imageClass = '';
-            article.imageError = true;
+            article.imageError = false; // Brak obrazu nie oznacza błędu
           }
+
+          // Ustawienie flagi, jeśli strona jest usunięta
+          article.isPageDeleted = isPageDeleted;
         }));
 
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
       }
-    },
-    
-    async scrapeRss() {
-      try {
-        const response = await fetch(`${this.getBaseUrl()}/api/scrape-rss`);
-        if (!response.ok) {
-          throw new Error('Nie udało się pobrać danych RSS');
-        }
-        const result = await response.json();
-        console.log('Dane RSS:', result); // Możesz dostosować sposób obsługi danych RSS według własnych potrzeb
-      } catch (error) {
-        console.error('Błąd pobierania danych RSS:', error);
-      }
-    },
-    
-    getBaseUrl() {
-      return window.location.origin;
     },
     
     async fetchFirstImage(link) {
@@ -106,26 +85,27 @@ export default {
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
+        
+        // Sprawdzenie, czy na stronie znajduje się komunikat o błędzie
+        const isPageDeleted = !!doc.querySelector('.text-wrapper h1')?.textContent.includes('Strona błędu') || 
+                              !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
+        
+        // Pobranie obrazka
         const imgElement = doc.querySelector('.container-subpage img');
-        const errorElement = doc.querySelector('.text-wrapper h1');
-
-        if (errorElement && errorElement.textContent.includes('Strona błędu')) {
-          return { imageUrl: '', isErrorPage: true };
-        }
 
         if (imgElement) {
-          return { imageUrl: imgElement.src, isErrorPage: false };
+          return { imageUrl: imgElement.src, isPageDeleted };
         } else {
-          return { imageUrl: '', isErrorPage: false };
+          return { imageUrl: '', isPageDeleted };
         }
       } catch (error) {
         console.error('Error fetching image:', error);
-        return { imageUrl: '', isErrorPage: false };
+        return { imageUrl: '', isPageDeleted: false };
       }
     },
     
     async processImage(imageUrl) {
-      if (!imageUrl) return { url: '', className: '', isErrorPage: false };
+      if (!imageUrl) return { url: '', className: '' };
       const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
 
       return new Promise((resolve) => {
@@ -142,11 +122,11 @@ export default {
             className = 'img-wide';
           }
 
-          resolve({ url: replacedUrl, className, isErrorPage: false });
+          resolve({ url: replacedUrl, className });
         };
         img.onerror = () => {
           console.error('Error loading image:', replacedUrl); 
-          resolve({ url: replacedUrl, className: 'img-error', isErrorPage: false });
+          resolve({ url: replacedUrl, className: 'img-error' });
         };
       });
     },
