@@ -39,9 +39,6 @@
   </div>
 </template>
 
-
-
-
 <script>
 export default {
   name: 'ArticleList',
@@ -197,10 +194,7 @@ export default {
     },
   }
 };
-
 </script>
-
-
 
 <style>
   .content {
