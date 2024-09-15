@@ -79,7 +79,7 @@ export default {
             article.imageError = true;
           } else if (!url) {
             // Brak obrazka, ustawiamy placeholder
-            article.imageUrl = '/img/temp.png';
+            article.imageUrl = '/img/temp.jpg';
             article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
             article.imageError = false;
           } else {
