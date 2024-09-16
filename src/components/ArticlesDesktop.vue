@@ -5,7 +5,7 @@
         class="list-group-item list-group-item-action article-item rounded-3"
         v-for="article in articles"
         :key="article._id"
-        @click="goToSource(article.link)"
+        @mousedown="handleMouseDown(article, $event)"
         style="cursor: pointer;"
       >
         <!-- Placeholder podczas ładowania -->
@@ -39,7 +39,6 @@
   </div>
 </template>
 
-
 <script>
 export default {
   name: 'ArticleList',
@@ -59,22 +58,21 @@ export default {
 
         // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
-      const data = await response.json();
-      this.articles = data.sort((a, b) => {
-        const dateComparison = new Date(b.pubDate) - new Date(a.pubDate);
-        if (dateComparison !== 0) {
-          return dateComparison;
-        }
-        return b.title.localeCompare(a.title); // Odwrotne sortowanie po tytule
-      });
-
+        const data = await response.json();
+        this.articles = data.sort((a, b) => {
+          const dateComparison = new Date(b.pubDate) - new Date(a.pubDate);
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+          return b.title.localeCompare(a.title); // Odwrotne sortowanie po tytule
+        });
 
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
           article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
           article.isLoading = true; // Flaga, że obrazek jest ładowany
           
-          const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
+          const { imageUrl, isPageDeleted, archivedLink } = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
           if (isPageDeleted) {
@@ -82,16 +80,19 @@ export default {
             article.imageUrl = '/img/error.png';
             article.imageClass = 'img-wide';
             article.imageError = true;
+            article.redirectLink = archivedLink || article.link; // Ustaw link archiwalny, jeśli dostępny
           } else if (!url) {
             // Brak obrazka, ustawiamy placeholder
             article.imageUrl = '/img/temp.jpg';
             article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
             article.imageError = false;
+            article.redirectLink = article.link; // Ustaw link do oryginalnej strony
           } else {
             // Poprawny obrazek, przypisujemy prawidłowy URL
             article.imageUrl = url;
             article.imageClass = className;
             article.imageError = false;
+            article.redirectLink = article.link; // Ustaw link do oryginalnej strony
           }
 
           // Zakończenie ładowania obrazka
@@ -104,29 +105,38 @@ export default {
     },
 
     async fetchFirstImage(link) {
-  try {
-    const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
-    const html = await response.text();
+      try {
+        const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
+        let html = await response.text();
 
-    // Sprawdzenie, czy HTML jest pusty
-    const isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+        // Sprawdzenie, czy HTML jest pusty
+        let isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+        let archivedLink = '';
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+        if (isPageDeleted) {
+          // Zmiana na URL archiwalny
+          archivedLink = link.replace('/aktualnosci/', '/archiwum-aktualnosci/');
+          const archiveResponse = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(archivedLink)}`);
+          html = await archiveResponse.text();
+          isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+        }
 
-    // Pobranie obrazka
-    const imgElement = doc.querySelector('.container-subpage img');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
-    if (imgElement) {
-      return { imageUrl: imgElement.src, isPageDeleted };
-    } else {
-      return { imageUrl: '', isPageDeleted };
-    }
-  } catch (error) {
-    console.error('Error fetching image:', error);
-    return { imageUrl: '', isPageDeleted: true }; // Zwróć isPageDeleted jako true w przypadku błędu
-  }
-},
+        // Pobranie obrazka
+        const imgElement = doc.querySelector('.container-subpage img');
+
+        if (imgElement) {
+          return { imageUrl: imgElement.src, isPageDeleted, archivedLink };
+        } else {
+          return { imageUrl: '', isPageDeleted, archivedLink };
+        }
+      } catch (error) {
+        console.error('Error fetching image:', error);
+        return { imageUrl: '', isPageDeleted: true, archivedLink: '' }; // Zwróć isPageDeleted jako true w przypadku błędu
+      }
+    },
 
     async scrapeRss() {
       try {
@@ -187,8 +197,14 @@ export default {
       return urlObj.toString();
     },
 
-    goToSource(link) {
-      window.location.href = link;
+    handleMouseDown(article, event) {
+      const link = article.redirectLink || article.link;
+      if (event.button === 0) { // Lewy przycisk myszy
+        window.location.href = link;
+      } else if (event.button === 1) { // Środkowy przycisk myszy
+        window.open(link, '_blank');
+        event.preventDefault(); // Zapobiegaj domyślnemu zachowaniu
+      }
     },
 
     formatDateTime(dateTime) {
