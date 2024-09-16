@@ -59,8 +59,15 @@ export default {
 
         // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
-        const data = await response.json();
-        this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+      const data = await response.json();
+      this.articles = data.sort((a, b) => {
+        const dateComparison = new Date(b.pubDate) - new Date(a.pubDate);
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        return b.title.localeCompare(a.title); // Odwrotne sortowanie po tytule
+      });
+
 
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
