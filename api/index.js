@@ -13,6 +13,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 app.listen(PORT, () => {
   console.log(`Serwer działa na http://localhost:${PORT}`);
 });
+
 // Połączenie z MongoDB
 mongoose.connect(MONGODB_URI)
     .then(() => {
@@ -21,7 +22,6 @@ mongoose.connect(MONGODB_URI)
     .catch(err => {
         console.error('Błąd połączenia z MongoDB:', err);
     });
-
 
 // Model danych
 const articleSchema = new mongoose.Schema({
@@ -40,7 +40,6 @@ function addZeroIfNeeded(num) {
 
 // Parser RSS
 const parser = new Parser();
-
 
 // Endpoint API do pobierania i zapisywania danych z RSS
 app.get('/api/scrape-rss', async (req, res) => {
@@ -77,10 +76,12 @@ app.get('/api/scrape-rss', async (req, res) => {
       const creator = item.creator.trim(); // Usunięcie spacji przed i po treści 'creator'
       const description = item.contentSnippet.trim(); // Usunięcie spacji przed i po treści 'description'
 
-      // Sprawdź, czy artykuł o tym samym tytule, dacie publikacji i opisie już istnieje
+      // Sprawdź, czy artykuł o tym samym tytule, dacie publikacji, opisie i twórcy już istnieje
       const existingArticle = await Article.findOne({
+        title: item.title,
         pubDate: new Date(formattedDate),
-        description: description
+        description: description,
+        creator: creator
       });
 
       if (!existingArticle) { // Sprawdź, czy artykuł już istnieje w bazie
@@ -113,45 +114,40 @@ app.get('/api/scrape-rss', async (req, res) => {
   }
 });
 
-
-
 // Endpoint zwracający wszystkie artykuły
 app.get('/api/articles', async (req, res) => {
-    try {
-      const articles = await Article.find();
-      res.json(articles);
-    } catch (err) {
-      console.error('Błąd podczas pobierania artykułów:', err);
-      res.status(500).json({ message: 'Wystąpił błąd podczas pobierania artykułów' });
-    }
-  });
-  
-  app.get('/api/proxy', async (req, res) => {
-    try {
-        const url = req.query.url;
-
-        if (!url || !url.startsWith('http')) {
-            return res.status(400).json({ message: 'Invalid URL' });
-        }
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                return res.send('');
-            }
-            return res.status(response.status).send(`Error: ${response.statusText}`);
-        }
-
-        const data = await response.text();
-        res.send(data);
-    } catch (error) {
-        console.error('Error fetching resource:', error);
-        res.status(500).send('An error occurred while fetching the resource');
-    }
+  try {
+    const articles = await Article.find();
+    res.json(articles);
+  } catch (err) {
+    console.error('Błąd podczas pobierania artykułów:', err);
+    res.status(500).json({ message: 'Wystąpił błąd podczas pobierania artykułów' });
+  }
 });
 
+app.get('/api/proxy', async (req, res) => {
+  try {
+    const url = req.query.url;
 
+    if (!url || !url.startsWith('http')) {
+      return res.status(400).json({ message: 'Invalid URL' });
+    }
 
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return res.send('');
+      }
+      return res.status(response.status).send(`Error: ${response.statusText}`);
+    }
+
+    const data = await response.text();
+    res.send(data);
+  } catch (error) {
+    console.error('Error fetching resource:', error);
+    res.status(500).send('An error occurred while fetching the resource');
+  }
+});
 
 module.exports = app;
