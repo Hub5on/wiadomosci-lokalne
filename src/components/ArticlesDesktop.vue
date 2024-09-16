@@ -39,6 +39,7 @@
   </div>
 </template>
 
+
 <script>
 export default {
   name: 'ArticleList',
@@ -71,7 +72,7 @@ export default {
 
           if (isPageDeleted) {
             article.isPageDeleted = true;
-            article.imageUrl = '/img/error.png'; // Nie ustawiamy obrazka, strona jest usunięta
+            article.imageUrl = '/img/error.png';
             article.imageClass = 'img-wide';
             article.imageError = true;
           } else if (!url) {
@@ -96,28 +97,29 @@ export default {
     },
 
     async fetchFirstImage(link) {
-      try {
-        const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+  try {
+    const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
+    const html = await response.text();
 
-        // Sprawdzenie, czy na stronie znajduje się komunikat o błędzie
-        const isPageDeleted = !!doc.body.textContent.includes('Podany adres jest nieprawidłowy');
+    // Sprawdzenie, czy HTML jest pusty
+    const isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
 
-        // Pobranie obrazka
-        const imgElement = doc.querySelector('.container-subpage img');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
 
-        if (imgElement) {
-          return { imageUrl: imgElement.src, isPageDeleted };
-        } else {
-          return { imageUrl: '', isPageDeleted };
-        }
-      } catch (error) {
-        console.error('Error fetching image:', error);
-        return { imageUrl: '', isPageDeleted: false };
-      }
-    },
+    // Pobranie obrazka
+    const imgElement = doc.querySelector('.container-subpage img');
+
+    if (imgElement) {
+      return { imageUrl: imgElement.src, isPageDeleted };
+    } else {
+      return { imageUrl: '', isPageDeleted };
+    }
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return { imageUrl: '', isPageDeleted: true }; // Zwróć isPageDeleted jako true w przypadku błędu
+  }
+},
 
     async scrapeRss() {
       try {
