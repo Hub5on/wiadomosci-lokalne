@@ -9,20 +9,22 @@
         style="cursor: pointer;"
       >
         <!-- Placeholder podczas ładowania -->
-        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="!article.imageUrl && !article.imageError" class="loading-image">
-        <!-- Obrazek artykułu -->
-        <img v-lazy="article.imageUrl" alt="Article Image" v-if="article.imageUrl" :class="article.imageClass">
-        <!-- Komunikat o błędzie -->
-        <div v-if="article.imageError" class="no-image-warning">
-          <img v-lazy="'img/error.png'" alt="Error Image" class="error-image">
+        <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
+
+        <!-- Obrazek artykułu lub placeholder albo komunikat o błędzie -->
+        <img v-lazy="article.imageUrl" alt="Article Image" v-else-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
+        
+        <!-- Komunikat o błędzie strony -->
+        <div v-else class="no-image-warning">
+          <img v-lazy="'/img/error.png'" alt="Error Image" class="error-image">
+          <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
+        
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
               <p class="pub-date">
                 <strong>Data publikacji:</strong> {{ formatDateTime(article.pubDate) }}
-                <!-- Czerwony napis jeśli brak zdjęcia -->
-                <span v-if="article.imageError" class="text-danger"><strong>Strona usunięta</strong></span>
               </p>
             </div>
             <div class="col-md-6">
@@ -36,6 +38,7 @@
     </ul>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -53,36 +56,78 @@ export default {
       try {
         // Wywołanie funkcji scrapeRss przed pobraniem artykułów
         await this.scrapeRss();
-        
+
         // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
-        const data = await response.json();
-        this.articles = data.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+      const data = await response.json();
+      this.articles = data.sort((a, b) => {
+        const dateComparison = new Date(b.pubDate) - new Date(a.pubDate);
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        return b.title.localeCompare(a.title); // Odwrotne sortowanie po tytule
+      });
+
 
         // Przetwarzanie obrazków
         await Promise.all(this.articles.map(async (article) => {
           article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
-          const imageUrl = await this.fetchFirstImage(article.link);
+          article.isLoading = true; // Flaga, że obrazek jest ładowany
+          
+          const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
           const { url, className } = await this.processImage(imageUrl);
 
-          // Tylko jeśli obrazek jest poprawny, przypisz URL i klasę
-          if (url) {
-            article.imageUrl = this.replaceLocalhostWithDomain(url);
-            article.imageClass = className;
+          if (isPageDeleted) {
+            article.isPageDeleted = true;
+            article.imageUrl = '/img/error.png';
+            article.imageClass = 'img-wide';
+            article.imageError = true;
+          } else if (!url) {
+            // Brak obrazka, ustawiamy placeholder
+            article.imageUrl = '/img/temp.jpg';
+            article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
             article.imageError = false;
           } else {
-            // W przeciwnym razie ustaw URL i klasę jako puste
-            article.imageUrl = '';
-            article.imageClass = '';
-            article.imageError = true;
+            // Poprawny obrazek, przypisujemy prawidłowy URL
+            article.imageUrl = url;
+            article.imageClass = className;
+            article.imageError = false;
           }
+
+          // Zakończenie ładowania obrazka
+          article.isLoading = false;
         }));
 
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
-    
+
+    async fetchFirstImage(link) {
+  try {
+    const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
+    const html = await response.text();
+
+    // Sprawdzenie, czy HTML jest pusty
+    const isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Pobranie obrazka
+    const imgElement = doc.querySelector('.container-subpage img');
+
+    if (imgElement) {
+      return { imageUrl: imgElement.src, isPageDeleted };
+    } else {
+      return { imageUrl: '', isPageDeleted };
+    }
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return { imageUrl: '', isPageDeleted: true }; // Zwróć isPageDeleted jako true w przypadku błędu
+  }
+},
+
     async scrapeRss() {
       try {
         const response = await fetch(`${this.getBaseUrl()}/api/scrape-rss`);
@@ -90,35 +135,16 @@ export default {
           throw new Error('Nie udało się pobrać danych RSS');
         }
         const result = await response.json();
-        console.log('Dane RSS:', result); // Możesz dostosować sposób obsługi danych RSS według własnych potrzeb
+        console.log('Dane RSS:', result);
       } catch (error) {
         console.error('Błąd pobierania danych RSS:', error);
       }
     },
-    
+
     getBaseUrl() {
       return window.location.origin;
     },
-    
-    async fetchFirstImage(link) {
-      try {
-        const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const imgElement = doc.querySelector('.container-subpage img');
 
-        if (imgElement) {
-          return imgElement.src;
-        } else {
-          return '';
-        }
-      } catch (error) {
-        console.error('Error fetching image:', error);
-        return '';
-      }
-    },
-    
     async processImage(imageUrl) {
       if (!imageUrl) return { url: '', className: '' };
       const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
@@ -140,41 +166,38 @@ export default {
           resolve({ url: replacedUrl, className });
         };
         img.onerror = () => {
-          console.error('Error loading image:', replacedUrl); 
-          resolve({ url: replacedUrl, className: 'img-error' });
+          console.error('Error loading image:', replacedUrl);
+          resolve({ url: '', className: 'img-error' });
         };
       });
     },
-    
+
     replaceLocalhostWithDomain(url) {
-      const targetDomain = 'powiatsredzki.pl'; 
+      const targetDomain = 'powiatsredzki.pl';
       let newUrl = url;
       if (url.includes(window.location.hostname)) {
         newUrl = url.replace(window.location.hostname, targetDomain);
       }
 
-      // Tworzenie URL obiektu, aby manipulować jego elementami
       const urlObj = new URL(newUrl);
 
       // Usuń port, jeśli istnieje
       urlObj.port = '';
 
-      const finalUrl = urlObj.toString();
-      
-      return finalUrl;
+      return urlObj.toString();
     },
-    
+
     goToSource(link) {
       window.location.href = link;
     },
-    
+
     formatDateTime(dateTime) {
       const date = new Date(dateTime);
       const formattedDate = `${this.addZeroIfNeeded(date.getDate())}/${this.addZeroIfNeeded(date.getMonth() + 1)}/${date.getFullYear()}`;
       const formattedTime = `${this.addZeroIfNeeded(date.getHours())}:${this.addZeroIfNeeded(date.getMinutes())}`;
       return `${formattedDate} ${formattedTime}`;
     },
-    
+
     addZeroIfNeeded(num) {
       return num < 10 ? '0' + num : num;
     },
