@@ -4,7 +4,7 @@
       <li class="list-group-item list-group-item-action article-item rounded-3" v-for="article in articles"
         :key="article._id" @mousedown="handleMouseDown(article, $event)" style="cursor: pointer;">
         <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
-        <div v-if="!article.isPageDeleted && !article.imageError">
+        <div v-else-if="!article.isPageDeleted && !article.imageError">
           <img v-lazy="article.imageUrl" alt="Article Image" :class="article.imageClass">
         </div>
         <div v-else class="no-image-warning">
@@ -25,7 +25,6 @@
           <h2 class="mb-3">{{ article.title }}</h2>
           <p>{{ article.description }}</p>
         </div>
-
       </li>
     </ul>
   </div>
