@@ -19,9 +19,13 @@ if (process.env.NODE_ENV === 'production') {
     updatefound () {
       console.log('New content is downloading.')
     },
-    updated () {
-      console.log('New content is available; please refresh.')
-    },
+    updated() {
+      console.log('New content is available; please refresh.');
+      const updateNotification = confirm("Nowa wersja aplikacji jest dostępna. Czy chcesz zaktualizować?");
+      if (updateNotification) {
+          window.location.reload();
+      }
+  },
     offline () {
       console.log('No internet connection found. App is running in offline mode.')
     },
