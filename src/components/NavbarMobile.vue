@@ -7,17 +7,17 @@
         </router-link>
       </div>
       <div class="text-center px-2">
-        <router-link to="/calendar">
+        <router-link to="/kalendarz">
           <i class="bi bi-calendar text-dark" style="font-size: 24px;"></i>
         </router-link>
       </div>
       <div class="text-center px-2">
-        <router-link to="/notifications">
+        <router-link to="/powiadomienia">
           <i class="bi bi-bell text-dark" style="font-size: 24px;"></i>
         </router-link>
       </div>
       <div class="text-center px-2">
-        <router-link to="/settings">
+        <router-link to="/ustawienia">
           <i class="bi bi-gear text-dark" style="font-size: 24px;"></i>
         </router-link>
       </div>
