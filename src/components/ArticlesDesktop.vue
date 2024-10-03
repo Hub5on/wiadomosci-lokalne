@@ -105,38 +105,35 @@ export default {
     },
 
     async fetchFirstImage(link) {
-      try {
-        const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
-        let html = await response.text();
+  try {
+    const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
+    let html = await response.text();
 
-        // Sprawdzenie, czy HTML jest pusty
-        let isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
-        let archivedLink = '';
+    let isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+    let archivedLink = '';
 
-        if (isPageDeleted) {
-          // Zmiana na URL archiwalny
-          archivedLink = link.replace('/aktualnosci/', '/archiwum-aktualnosci/');
-          const archiveResponse = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(archivedLink)}`);
-          html = await archiveResponse.text();
-          isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
-        }
+    if (isPageDeleted) {
+      archivedLink = link.replace('/aktualnosci/', '/archiwum-aktualnosci/');
+      const archiveResponse = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(archivedLink)}`);
+      html = await archiveResponse.text();
+      isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+    }
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
 
-        // Pobranie obrazka
-        const imgElement = doc.querySelector('.container-subpage img');
+    const imgElement = doc.querySelector('.container-subpage img');
 
-        if (imgElement) {
-          return { imageUrl: imgElement.src, isPageDeleted, archivedLink };
-        } else {
-          return { imageUrl: '', isPageDeleted, archivedLink };
-        }
-      } catch (error) {
-        console.error('Error fetching image:', error);
-        return { imageUrl: '', isPageDeleted: true, archivedLink: '' }; // Zwróć isPageDeleted jako true w przypadku błędu
-      }
-    },
+    if (imgElement) {
+      return { imageUrl: imgElement.src, isPageDeleted, archivedLink };
+    } else {
+      return { imageUrl: '', isPageDeleted, archivedLink };
+    }
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return { imageUrl: '', isPageDeleted: true, archivedLink: '' };
+  }
+},
 
     async scrapeRss() {
       try {
@@ -198,14 +195,16 @@ export default {
     },
 
     handleMouseDown(article, event) {
-      const link = article.redirectLink || article.link;
-      if (event.button === 0) { // Lewy przycisk myszy
-        window.location.href = link;
-      } else if (event.button === 1) { // Środkowy przycisk myszy
-        window.open(link, '_blank');
-        event.preventDefault(); // Zapobiegaj domyślnemu zachowaniu
-      }
-    },
+  // Użyj URL archiwalnego, jeśli strona została usunięta
+  const link = article.isPageDeleted ? article.redirectLink : article.link;
+
+  if (event.button === 0) { // Lewy przycisk myszy
+    window.location.href = link;
+  } else if (event.button === 1) { // Środkowy przycisk myszy
+    window.open(link, '_blank');
+    event.preventDefault(); // Zapobiegaj domyślnemu zachowaniu
+  }
+},
 
     formatDateTime(dateTime) {
       const date = new Date(dateTime);
