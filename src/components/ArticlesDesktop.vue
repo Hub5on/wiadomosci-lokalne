@@ -1,25 +1,16 @@
 <template>
   <div class="content">
     <ul class="list-group list-group-flush p-3 one-article">
-      <li
-        class="list-group-item list-group-item-action article-item rounded-3"
-        v-for="article in articles"
-        :key="article._id"
-        @click="goToSource(article.link)"
-        style="cursor: pointer;"
-      >
-        <!-- Placeholder podczas ładowania -->
+      <li class="list-group-item list-group-item-action article-item rounded-3" v-for="article in articles"
+        :key="article._id" @mousedown="handleMouseDown(article, $event)" style="cursor: pointer;">
         <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
-
-        <!-- Obrazek artykułu lub placeholder albo komunikat o błędzie -->
-        <img v-lazy="article.imageUrl" alt="Article Image" v-else-if="!article.isPageDeleted && !article.imageError" :class="article.imageClass">
-        
-        <!-- Komunikat o błędzie strony -->
+        <div v-if="!article.isPageDeleted && !article.imageError">
+          <img v-lazy="article.imageUrl" alt="Article Image" :class="article.imageClass">
+        </div>
         <div v-else class="no-image-warning">
           <img v-lazy="'/img/error.png'" alt="Error Image" class="error-image">
           <span class="text-danger"><strong>Strona usunięta</strong></span>
         </div>
-        
         <div class="article-text p-3">
           <div class="row">
             <div class="col-md-6">
@@ -34,11 +25,12 @@
           <h2 class="mb-3">{{ article.title }}</h2>
           <p>{{ article.description }}</p>
         </div>
+
       </li>
+
     </ul>
   </div>
 </template>
-
 
 <script>
 export default {
@@ -54,79 +46,90 @@ export default {
   methods: {
     async fetchArticles() {
       try {
-        // Wywołanie funkcji scrapeRss przed pobraniem artykułów
         await this.scrapeRss();
-
-        // Pobieranie artykułów
         const response = await fetch(`${this.getBaseUrl()}/api/articles`);
-      const data = await response.json();
-      this.articles = data.sort((a, b) => {
-        const dateComparison = new Date(b.pubDate) - new Date(a.pubDate);
-        if (dateComparison !== 0) {
-          return dateComparison;
-        }
-        return b.title.localeCompare(a.title); // Odwrotne sortowanie po tytule
-      });
+        const data = await response.json();
 
+        this.articles = data.sort((a, b) => {
+          const dateComparison = new Date(b.pubDate) - new Date(a.pubDate);
+          return dateComparison !== 0 ? dateComparison : b.title.localeCompare(a.title);
+        });
 
-        // Przetwarzanie obrazków
-        await Promise.all(this.articles.map(async (article) => {
-          article.loadingImageUrl = '/img/loading.gif'; // Placeholder image URL
-          article.isLoading = true; // Flaga, że obrazek jest ładowany
-          
-          const { imageUrl, isPageDeleted } = await this.fetchFirstImage(article.link);
-          const { url, className } = await this.processImage(imageUrl);
-
-          if (isPageDeleted) {
-            article.isPageDeleted = true;
-            article.imageUrl = '/img/error.png';
-            article.imageClass = 'img-wide';
-            article.imageError = true;
-          } else if (!url) {
-            // Brak obrazka, ustawiamy placeholder
-            article.imageUrl = '/img/temp.jpg';
-            article.imageClass = 'img-wide'; // Domyślna klasa dla placeholdera
-            article.imageError = false;
-          } else {
-            // Poprawny obrazek, przypisujemy prawidłowy URL
-            article.imageUrl = url;
-            article.imageClass = className;
-            article.imageError = false;
-          }
-
-          // Zakończenie ładowania obrazka
-          article.isLoading = false;
-        }));
-
+        await Promise.all(this.articles.map(this.processArticle));
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
 
+    async processArticle(article) {
+      article.loadingImageUrl = '/img/loading.gif';
+      article.isLoading = true;
+
+      const { imageUrl, isPageDeleted, originalLinkUsed } = await this.fetchFirstImage(article.link);
+      const { url, className } = await this.processImage(imageUrl);
+
+      if (isPageDeleted) {
+        article.isPageDeleted = true;
+        article.imageUrl = '/img/error.png';
+        article.imageClass = 'img-wide';
+        article.imageError = true;
+        article.redirectLink = originalLinkUsed;
+      } else if (!url) {
+        article.imageUrl = '/img/temp.jpg';
+        article.imageClass = 'img-wide';
+        article.imageError = false;
+        article.redirectLink = article.link;
+      } else {
+        article.imageUrl = url;
+        article.imageClass = className;
+        article.imageError = false;
+        article.redirectLink = originalLinkUsed;
+      }
+
+      article.isLoading = false;
+    },
+
     async fetchFirstImage(link) {
-  try {
-    const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(link)}`);
-    const html = await response.text();
+      try {
+        const html = await this.fetchHtml(link);
+        let isPageDeleted = this.isPageDeleted(html);
+        let originalLinkUsed = link;
 
-    // Sprawdzenie, czy HTML jest pusty
-    const isPageDeleted = html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+        if (isPageDeleted) {
+          const archivedLink = link.replace('/aktualnosci/', '/archiwum-aktualnosci/');
+          const archiveHtml = await this.fetchHtml(archivedLink);
+          isPageDeleted = this.isPageDeleted(archiveHtml);
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+          if (!isPageDeleted) {
+            originalLinkUsed = archivedLink;
+            return this.extractImage(archiveHtml, originalLinkUsed, isPageDeleted);
+          }
+        } else {
+          return this.extractImage(html, originalLinkUsed, isPageDeleted);
+        }
 
-    // Pobranie obrazka
-    const imgElement = doc.querySelector('.container-subpage img');
+        return { imageUrl: '', isPageDeleted: true, originalLinkUsed };
+      } catch (error) {
+        console.error('Error fetching image:', error);
+        return { imageUrl: '', isPageDeleted: true, originalLinkUsed: '' };
+      }
+    },
 
-    if (imgElement) {
-      return { imageUrl: imgElement.src, isPageDeleted };
-    } else {
-      return { imageUrl: '', isPageDeleted };
-    }
-  } catch (error) {
-    console.error('Error fetching image:', error);
-    return { imageUrl: '', isPageDeleted: true }; // Zwróć isPageDeleted jako true w przypadku błędu
-  }
-},
+    async fetchHtml(url) {
+      const response = await fetch(`${this.getBaseUrl()}/api/proxy?url=${encodeURIComponent(url)}`);
+      return response.text();
+    },
+
+    isPageDeleted(html) {
+      return html.trim() === '<html><head></head><body></body></html>' || html.trim() === '';
+    },
+
+    extractImage(html, originalLinkUsed, isPageDeleted) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const imgElement = doc.querySelector('.container-subpage img');
+      const imageUrl = imgElement ? imgElement.src : '';
+      return { imageUrl, isPageDeleted, originalLinkUsed };
+    },
 
     async scrapeRss() {
       try {
@@ -149,20 +152,12 @@ export default {
       if (!imageUrl) return { url: '', className: '' };
       const replacedUrl = this.replaceLocalhostWithDomain(imageUrl);
 
+      const img = new Image();
+      img.src = replacedUrl;
+
       return new Promise((resolve) => {
-        const img = new Image();
-        img.src = replacedUrl;
         img.onload = () => {
-          const width = img.width;
-          const height = img.height;
-          let className = '';
-
-          if (width === height || height > width) {
-            className = 'img-square-or-tall';
-          } else {
-            className = 'img-wide';
-          }
-
+          const className = img.width === img.height || img.height > img.width ? 'img-square-or-tall' : 'img-wide';
           resolve({ url: replacedUrl, className });
         };
         img.onerror = () => {
@@ -174,21 +169,24 @@ export default {
 
     replaceLocalhostWithDomain(url) {
       const targetDomain = 'powiatsredzki.pl';
-      let newUrl = url;
-      if (url.includes(window.location.hostname)) {
-        newUrl = url.replace(window.location.hostname, targetDomain);
-      }
+      let newUrl = url.includes(window.location.hostname) ? url.replace(window.location.hostname, targetDomain) : url;
 
       const urlObj = new URL(newUrl);
-
-      // Usuń port, jeśli istnieje
       urlObj.port = '';
 
       return urlObj.toString();
     },
 
-    goToSource(link) {
-      window.location.href = link;
+    handleMouseDown(article, event) {
+      const link = article.redirectLink;
+      console.log("Redirecting to:", link);
+
+      if (event.button === 0) {
+        window.location.href = link;
+      } else if (event.button === 1) {
+        window.open(link, '_blank');
+        event.preventDefault();
+      }
     },
 
     formatDateTime(dateTime) {
@@ -206,67 +204,86 @@ export default {
 </script>
 
 <style>
-  .content {
-    padding: 0 25%;
-    background-color: #f0f0f0;
-  }
-  .one-article li {
-    padding-top: 15px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-    border-radius: 15px;
-    overflow: hidden;
-  }
-  .article-item img {
-    width: 100%;
-    height: auto;
-    max-height: 30rem;
-    object-fit: contain; /* Zmienione na contain */
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
-  }
-  .img-square-or-tall {
-    object-fit: contain; /* Zmienione na contain */
-    max-height: 30rem;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
-  }
-  .img-wide {
-    object-fit: contain; /* Zmienione na contain */
-    max-height: 30rem;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
-  }
-  .article-text {
-    padding: 5%;
-  }
+.content {
+  padding: 0 25%;
+  background-color: #f0f0f0;
+}
+
+.one-article li {
+  padding-top: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.article-item img {
+  width: 100%;
+  height: auto;
+  max-height: 30rem;
+  object-fit: contain;
+  /* Zmienione na contain */
+  background-color: #ffffff;
+  /* Dodane tło dla pustych przestrzeni */
+}
+
+.img-square-or-tall {
+  object-fit: contain;
+  /* Zmienione na contain */
+  max-height: 30rem;
+  background-color: #ffffff;
+  /* Dodane tło dla pustych przestrzeni */
+}
+
+.img-wide {
+  object-fit: contain;
+  /* Zmienione na contain */
+  max-height: 30rem;
+  background-color: #ffffff;
+  /* Dodane tło dla pustych przestrzeni */
+}
+
+.article-text {
+  padding: 5%;
+}
+
+.author {
+  text-align: right;
+}
+
+.author,
+.pub-date {
+  font-size: 1rem;
+}
+
+@media (max-width: 576px) {
+  .pub-date,
   .author {
-    text-align: right;
+    font-size: 0.8rem;
   }
-  .author, .pub-date {
-    font-size: 1rem;
-  }
-  @media (max-width: 576px) {
-    .pub-date, .author {
-      font-size: 0.8rem;
-    }
-  }
-  .no-image-warning {
-    color: red;
-    font-weight: bold;
-    text-align: center;
-    padding: 10px 0;
-  }
-  .loading-image {
-    width: 100%;
-    height: auto;
-    max-height: 30rem;
-    object-fit: contain;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
-  }
-  .error-image {
-    width: 50%;
-    height: auto;
-    max-height: 25rem;
-    object-fit: contain;
-    background-color: #ffffff; /* Dodane tło dla pustych przestrzeni */
-  }
+}
+
+.no-image-warning {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.loading-image {
+  width: 100%;
+  height: auto;
+  max-height: 30rem;
+  object-fit: contain;
+  background-color: #ffffff;
+}
+
+.error-image {
+  width: 50%;
+  height: auto;
+  max-height: 25rem;
+  object-fit: contain;
+  background-color: #ffffff;
+}
 </style>
