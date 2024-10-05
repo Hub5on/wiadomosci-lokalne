@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '@/components/HomePage.vue';
 import CalendarPage from '@/components/CalendarPage.vue';
+import SettingsPage from '@/components/SettingsPage.vue';
 
 const routes = [
   {
@@ -12,7 +13,13 @@ const routes = [
     path: '/kalendarz',
     name: 'CalendarPage',
     component: CalendarPage
+  },
+  {
+    path: '/ustawienia',
+    name: 'SettingsPage',
+    component: SettingsPage
   }
+    
 ];
 
 const router = createRouter({
