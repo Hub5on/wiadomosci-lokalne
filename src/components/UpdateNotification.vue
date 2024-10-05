@@ -54,6 +54,11 @@ export default {
     document.addEventListener('swUpdated', this.handleSWUpdate, { once: true });
     window.addEventListener('resize', this.updateNotificationPosition); // Dodajemy nasłuchiwanie na resize
     this.updateNotificationPosition(); // Ustawiamy pozycję na początku
+    window.addEventListener('beforeunload', this.handleBeforeUnload); // Dodajemy nasłuchiwanie na przed odświeżeniem
+  },
+  beforeUnmount() {
+    // Usuwamy nasłuchiwanie, gdy komponent jest zniszczony
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
   },
   methods: {
     handleSWUpdate(event) {
@@ -94,6 +99,13 @@ export default {
     updateNotificationPosition() {
       // Zmiana bottom w zależności od szerokości okna
       this.notificationBottom = window.innerWidth <= 768 ? '60px' : '35px';
+    },
+    handleBeforeUnload(event) {
+      if (!this.isOnline) {
+        // Zablokuj odświeżanie, jeśli aplikacja jest offline
+        event.preventDefault();
+        event.returnValue = ''; // Dla niektórych przeglądarek
+      }
     },
   },
 };
