@@ -19,14 +19,11 @@ if (process.env.NODE_ENV === 'production') {
     updatefound () {
       console.log('New content is downloading.')
     },
-    updated (registration) {
+    updated(registration) {
       console.log('New content is available; please refresh.');
-      const updateNotification = confirm("Nowa wersja aplikacji jest dostępna. Czy chcesz zaktualizować?");
-      if (updateNotification) {
-        if (registration && registration.waiting) {
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
-      }
+      document.dispatchEvent(
+        new CustomEvent('swUpdated', { detail: registration })
+      );
     },
     offline () {
       console.log('No internet connection found. App is running in offline mode.')
@@ -35,10 +32,4 @@ if (process.env.NODE_ENV === 'production') {
       console.error('Error during service worker registration:', error)
     }
   })
-  let refreshing;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
 }
