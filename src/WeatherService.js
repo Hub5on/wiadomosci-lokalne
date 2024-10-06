@@ -1,6 +1,7 @@
 export async function fetchWeather(locationName) {
+  const WEATHER_API = process.env.WEATHER_API;
     try {
-      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${locationName}&lang=pl&units=metric&appid= ***REMOVED***`);
+      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${locationName}&lang=pl&units=metric&appid=${WEATHER_API}`);
       const data = await response.json();
       return {
         temp: data.main.temp,
