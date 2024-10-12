@@ -31,6 +31,7 @@
     "portal-vue": "^3.0.0-beta.0",
     "register-service-worker": "^1.7.2",
     "rss-parser": "^3.13.0",
+    "update": "^0.7.4",
     "vue": "^3.4.26",
     "vue-lazyload": "^3.0.0",
     "vue-loader": "^17.4.2",
