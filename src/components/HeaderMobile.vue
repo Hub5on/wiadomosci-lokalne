@@ -7,9 +7,9 @@
       <!-- Kontener z informacjami o pogodzie -->
       <div v-if="weatherData" class="d-flex align-items-center">
         <!-- Lokalizacja -->
-        <div class="text-center mx-1">{{ currentLocation.name }}</div>
+        <div class="text-center mx-0">{{ currentLocation.name }}</div>
         <!-- Ikona pogody -->
-        <div class="text-center mx-1">
+        <div class="text-center mx-0">
           <img :src="`http://openweathermap.org/img/wn/${weatherData.icon}.png`" alt="Weather Icon">
         </div>
         <!-- Temperatura -->
