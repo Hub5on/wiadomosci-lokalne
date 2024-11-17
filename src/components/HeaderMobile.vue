@@ -1,18 +1,19 @@
 <template>
   <nav class="navbar navbar-light bg-info text-white">
-    <div class="container-fluid">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <!-- Tytuł 'Aktualności' -->
       <span class="navbar-brand mb-0 h1 p-1 text-white">Aktualności</span>
-      <div class="ml-auto d-flex flex-column">
-        <div v-if="weatherData" class="weather-info d-flex align-items-center">
-          <!-- Lokalizacja -->
-          <div class="text-center mx-2">{{ currentLocation.name }}</div>
-          <!-- Ikona pogody -->
-          <div class="text-center mx-2">
-            <img :src="`http://openweathermap.org/img/wn/${weatherData.icon}.png`" alt="Weather Icon">
-          </div>
-          <!-- Temperatura -->
-          <div class="text-center mx-2">{{ formatTemperature(weatherData.temp) }}°C</div>
+      
+      <!-- Kontener z informacjami o pogodzie -->
+      <div v-if="weatherData" class="d-flex align-items-center">
+        <!-- Lokalizacja -->
+        <div class="text-center mx-2">{{ currentLocation.name }}</div>
+        <!-- Ikona pogody -->
+        <div class="text-center mx-2">
+          <img :src="`http://openweathermap.org/img/wn/${weatherData.icon}.png`" alt="Weather Icon">
         </div>
+        <!-- Temperatura -->
+        <div class="text-center mx-2">{{ formatTemperature(weatherData.temp) }}°C</div>
       </div>
     </div>
   </nav>
