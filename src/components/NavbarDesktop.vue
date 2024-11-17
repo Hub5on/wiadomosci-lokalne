@@ -5,6 +5,18 @@
         <img src="/img/icons/favicon-32x32.png" alt="Logo" class="me-2">Wiadomości Lokalne
       </router-link>
 
+      <!-- Przełącznik GPS / wybór miasta -->
+      <div class="d-flex justify-content-center align-items-center">
+        <label class="form-check-label me-2" for="useGps">Użyj GPS</label>
+        <input 
+          type="checkbox" 
+          id="useGps" 
+          v-model="useGps"
+          @change="onLocationChange" 
+        />
+        <label class="form-check-label ms-2" for="useGps">Wybór miasta</label>
+      </div>
+
       <!-- Wyswietlanie pogody w srodku -->
       <div class="weather-info mx-auto">
         <div v-if="weather" class="d-flex align-items-center justify-content-center">
@@ -43,36 +55,80 @@
 </template>
 
 <script>
-import { fetchWeather } from '../WeatherService.js'; // importujemy Twoją funkcję do pobierania pogody
+import { fetchWeather } from '..//WeatherService.js'; // Importujemy funkcję do pobierania pogody
 
 export default {
   data() {
     return {
       isNavbarCollapsed: false,
-      weather: null, // Obiekt przechowujący dane o pogodzie
+      useGps: false,  // Zmienna do przełączania między GPS a wyborem miasta
+      weather: null,  // Obiekt pogody
+      city: ''  // Przechowuje miasto, które wybiera użytkownik
     };
   },
   mounted() {
-    this.getWeather();
+    this.initializeLocation(); // Inicjalizujemy lokalizację przy ładowaniu strony
   },
   methods: {
-    async getWeather() {
-      const city = 'Warszawa'; // Możesz tu ustawić miasto, które chcesz wyświetlić domyślnie
+    // Funkcja inicjalizująca lokalizację (z ciastka lub GPS)
+    initializeLocation() {
+      const savedCity = this.getCityFromCookie();
+      if (savedCity) {
+        this.city = savedCity; // Jeśli miasto jest zapisane w ciastku, ustawiamy je
+        this.getWeather(savedCity);
+      } else {
+        this.getLocationFromGps(); // Jeśli brak miasta w ciastku, pobieramy GPS
+      }
+    },
 
+    // Sprawdzamy, czy miasto jest zapisane w ciastku
+    getCityFromCookie() {
+      const match = document.cookie.match(/(^| )selectedCity=([^;]+)/);
+      return match ? match[2] : null;
+    },
+
+    // Funkcja pobierania pogody
+    async getWeather(city) {
       try {
-        const weatherData = await fetchWeather(city); // Używamy Twojej funkcji do pobrania pogody
-        
+        const weatherData = await fetchWeather(city);  // Funkcja pobierająca dane o pogodzie
         if (weatherData) {
           this.weather = {
             city: weatherData.city,
             temperature: weatherData.temp,
-            icon: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`, // Jeśli masz ikonę, możesz zmienić tę linijkę
+            icon: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`, // Link do ikony
           };
         } else {
           console.error('Błąd pobierania danych pogodowych');
         }
       } catch (error) {
         console.error('Błąd podczas pobierania pogody:', error);
+      }
+    },
+
+    // Funkcja do pobierania lokalizacji z GPS
+    getLocationFromGps() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pl`);
+            const data = await response.json();
+            this.city = data.city || data.locality || data.principalSubdivision || 'Nieznane miasto';
+            this.getWeather(this.city); // Pobieramy pogodę na podstawie lokalizacji GPS
+          } catch (error) {
+            console.error('Błąd pobierania lokalizacji z GPS:', error);
+          }
+        });
+      }
+    },
+
+    // Funkcja do przełączania między GPS a wyborem miasta
+    onLocationChange() {
+      if (this.useGps) {
+        this.getLocationFromGps(); // Jeśli przełączamy na GPS, pobieramy lokalizację
+      } else {
+        this.city = ''; // Resetujemy miasto, gdy wracamy do ręcznego wyboru
+        this.weather = null; // Resetujemy pogodę
       }
     },
   },
