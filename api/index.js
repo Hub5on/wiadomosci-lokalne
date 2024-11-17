@@ -150,4 +150,33 @@ app.get('/api/proxy', async (req, res) => {
   }
 });
 
+app.get('/api/get-weather', async (req, res) => {
+  const WEATHER_API = process.env.WEATHER_API; // Access the API key securely on the server side
+  const locationName = req.query.locationName;
+
+  if (!locationName) {
+    return res.status(400).json({ message: 'Location name is required' });
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${locationName}&lang=pl&units=metric&appid=${WEATHER_API}`
+    );
+    const data = await response.json();
+
+    if (response.ok) {
+      res.json({
+        temp: data.main.temp,
+        description: data.weather[0].description,
+        icon: data.weather[0].icon
+      });
+    } else {
+      res.status(response.status).json({ message: data.message || 'Failed to fetch weather data' });
+    }
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    res.status(500).json({ message: 'Error fetching weather data' });
+  }
+});
+
 module.exports = app;
