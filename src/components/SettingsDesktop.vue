@@ -3,17 +3,17 @@
     <input
       type="text"
       v-model="query"
-      @input="filterList"
-      placeholder="Wpisz nazwę miasta..."
+      @input="getLocationSuggestions"
+      placeholder="Wpisz nazwę miasta lub lokalizacji..."
     />
     <ul v-if="filteredCities.length" class="city-list">
       <li
-        v-for="city in filteredCities"
-        :key="city"
+        v-for="(city, index) in filteredCities"
+        :key="index"
         @click="selectCity(city)"
         class="city-item"
       >
-        {{ city }}
+        {{ city.name }}
       </li>
     </ul>
     <button @click="saveCity" class="save-button">Zapisz</button>
@@ -25,35 +25,53 @@ export default {
   data() {
     return {
       query: '',
-      cities: ['Warszawa', 'Kraków', 'Łódź', 'Wrocław', 'Poznań'],
       filteredCities: [],
-      selectedCity: ''
+      selectedCity: '',
     };
   },
   methods: {
-    filterList() {
+    async getLocationSuggestions() {
       if (this.query.trim() === '') {
         this.filteredCities = [];
         return;
       }
-      this.filteredCities = this.cities.filter(city =>
-        city.toLowerCase().startsWith(this.query.toLowerCase())
-      );
+
+      const apiKey = '46bb0281a415476fae5ca22fed3e4d75'; // Wstaw swój klucz API
+      const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(
+        this.query
+      )}&key=${apiKey}&language=pl&no_annotations=1`;
+
+      try {
+        const response = await fetch(endpoint);
+        const data = await response.json();
+
+        if (data.results && data.results.length) {
+          this.filteredCities = data.results.map(result => ({
+            name: result.formatted,
+            lat: result.geometry.lat,
+            lng: result.geometry.lng,
+          }));
+        } else {
+          this.filteredCities = [];
+        }
+      } catch (error) {
+        console.error('Błąd pobierania lokalizacji:', error);
+      }
     },
     selectCity(city) {
-      this.query = city;
-      this.filteredCities = [];
+      this.query = city.name;
       this.selectedCity = city;
+      this.filteredCities = [];
     },
     saveCity() {
       if (this.selectedCity) {
-        document.cookie = `selectedCity=${encodeURIComponent(this.selectedCity)}; path=/;`;
-        alert(`Zapisano miasto: ${this.selectedCity}`);
+        document.cookie = `selectedCity=${encodeURIComponent(this.selectedCity.name)}; path=/;`;
+        alert(`Zapisano miasto: ${this.selectedCity.name}`);
       } else {
         alert('Nie wybrano miasta. Wybierz miasto z listy.');
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
