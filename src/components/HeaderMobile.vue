@@ -54,6 +54,6 @@ export default {
   padding: 1rem 0.5rem !important;
 }
 .weather-info {
-  padding: 0 1rem 0 0.5rem;
+  padding: 0 0.25rem 0 0.25rem;
 }
 </style>
