@@ -36,7 +36,7 @@ export default {
         return;
       }
 
-      const apiKey = '46bb0281a415476fae5ca22fed3e4d75'; // Wstaw swój klucz API
+      const apiKey = 'YOUR_OPENCAGE_API_KEY'; // Wstaw swój klucz API
       const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(
         this.query
       )}&key=${apiKey}&language=pl&no_annotations=1`;
@@ -47,7 +47,7 @@ export default {
 
         if (data.results && data.results.length) {
           this.filteredCities = data.results.map(result => ({
-            name: result.formatted,
+            name: result.components.city || result.components.town || result.components.village,
             lat: result.geometry.lat,
             lng: result.geometry.lng,
           }));
@@ -65,12 +65,22 @@ export default {
     },
     saveCity() {
       if (this.selectedCity) {
-        document.cookie = `selectedCity=${encodeURIComponent(this.selectedCity.name)}; path=/;`;
+        const normalizedCity = this.removePolishChars(this.selectedCity.name);
+        document.cookie = `selectedCity=${encodeURIComponent(normalizedCity)}; path=/;`;
         alert(`Zapisano miasto: ${this.selectedCity.name}`);
       } else {
         alert('Nie wybrano miasta. Wybierz miasto z listy.');
       }
     },
+    // Funkcja do usuwania polskich znaków
+    removePolishChars(str) {
+      const polishChars = {
+        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+        'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+      };
+
+      return str.split('').map(char => polishChars[char] || char).join('');
+    }
   },
 };
 </script>
