@@ -7,13 +7,13 @@
       <!-- Kontener z informacjami o pogodzie -->
       <div v-if="weatherData" class="d-flex align-items-center">
         <!-- Lokalizacja -->
-        <div class="text-center mx-2">{{ currentLocation.name }}</div>
+        <div class="text-center mx-1">{{ currentLocation.name }}</div>
         <!-- Ikona pogody -->
-        <div class="text-center mx-2">
+        <div class="text-center mx-1">
           <img :src="`http://openweathermap.org/img/wn/${weatherData.icon}.png`" alt="Weather Icon">
         </div>
         <!-- Temperatura -->
-        <div class="text-center mx-2">{{ formatTemperature(weatherData.temp) }}°C</div>
+        <div class="text-center mx-1">{{ formatTemperature(weatherData.temp) }}°C</div>
       </div>
     </div>
   </nav>
@@ -54,6 +54,6 @@ export default {
   padding: 1rem 0.5rem !important;
 }
 .weather-info {
-  padding: 0 0.25rem 0 0.25rem;
+  padding: 0 1rem 0 0.5rem;
 }
 </style>
