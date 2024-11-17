@@ -7,7 +7,7 @@
 
       <!-- Wyswietlanie pogody w srodku -->
       <div class="weather-info mx-auto">
-        <div v-if="weather" class="d-flex align-items-center">
+        <div v-if="weather" class="d-flex align-items-center justify-content-center">
           <img :src="weather.icon" alt="weather icon" class="weather-icon me-2">
           <span>{{ weather.city }}</span>
           <span>{{ weather.temperature }}°C</span>
@@ -129,7 +129,7 @@ export default {
   background-color: #06354C;
 }
 
-.navbar{
+.navbar {
   box-shadow: 0 4px 8px gray;
 }
 
@@ -139,11 +139,13 @@ export default {
   height: 100%;
 }
 
+/* Stylizacja pogody */
 .weather-info {
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
+  margin: 0 auto;
 }
 
 .weather-icon {
