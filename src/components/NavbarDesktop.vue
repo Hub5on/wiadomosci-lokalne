@@ -4,7 +4,7 @@
       <router-link class="navbar-brand ms-5" to="/">
         <img src="/img/icons/favicon-32x32.png" alt="Logo" class="me-2">Wiadomości Lokalne
       </router-link>
-      
+
       <!-- Wyswietlanie pogody w srodku -->
       <div class="weather-info mx-auto">
         <div v-if="weather" class="d-flex align-items-center">
@@ -86,16 +86,15 @@ export default {
 }
 
 .navbar-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  margin: 0;
-  padding: 0;
+  display: flex; /* Zmieniamy na flex, aby elementy były obok siebie */
+  flex-direction: row; /* Wyświetlamy elementy w wierszu */
+  align-items: center; /* Wyrównanie w pionie */
+  margin: 0; 
+  padding: 0; 
 }
 
 .navbar-nav .nav-item {
-  margin: 5px 0;
+  margin: 0 10px; /* Odstępy między elementami */
 }
 
 .nav-link {
@@ -103,6 +102,7 @@ export default {
   text-decoration: none;
 }
 
+/* Podkreślenie szare przy hover z animacją od środka */
 .nav-link::after {
   content: "";
   position: absolute;
@@ -121,14 +121,15 @@ export default {
   background-color: lightgray;
 }
 
+/* Grubsze podkreślenie niebieskie dla aktywnego linku z animacją od środka */
 .nav-link.active::after {
-  width: 50%;
+  width: 50%; 
   left: 50%;
   height: 3px;
   background-color: #06354C;
 }
 
-.navbar {
+.navbar{
   box-shadow: 0 4px 8px gray;
 }
 
