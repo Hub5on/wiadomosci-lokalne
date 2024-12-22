@@ -5,37 +5,38 @@
         <img src="/img/icons/favicon-32x32.png" alt="Logo" class="me-2">Wiadomości Lokalne
       </router-link>
 
-      <!-- Wyswietlanie pogody w srodku -->
-      <div class="weather-info mx-auto">
-        <div v-if="weather" class="d-flex align-items-center justify-content-center">
-          <img :src="weather.icon" alt="weather icon" class="weather-icon me-2">
-          <span>{{ weather.city }}</span>
-          <span>{{ weather.temperature }}°C</span>
-        </div>
-        <div v-else>Ładowanie pogody...</div>
-      </div>
 
-      <button
-        class="navbar-toggler me-5"
-        type="button"
-        @click="isNavbarCollapsed = !isNavbarCollapsed"
-        aria-controls="navbarNavAltMarkup"
-        aria-expanded="isNavbarCollapsed.toString()"
-        aria-label="Toggle navigation"
-      >
+
+      <button class="navbar-toggler me-5" type="button" @click="isNavbarCollapsed = !isNavbarCollapsed"
+        aria-controls="navbarNavAltMarkup" aria-expanded="isNavbarCollapsed.toString()" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div :class="['collapse', 'navbar-collapse', { show: isNavbarCollapsed }]" id="navbarNavAltMarkup">
         <ul class="navbar-nav mx-auto justify-content-end me-5">
           <li class="nav-item">
-            <router-link class="nav-link" to="/" exact-active-class="fw-bold active" active-class="fw-bold active">Aktualności</router-link>
+            <router-link class="nav-link" to="/" exact-active-class="fw-bold active"
+              active-class="fw-bold active">Aktualności</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/kalendarz" exact-active-class="fw-bold active" active-class="fw-bold active">Kalendarz</router-link>
+            <router-link class="nav-link" to="/kalendarz" exact-active-class="fw-bold active"
+              active-class="fw-bold active">Kalendarz</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/ustawienia" exact-active-class="fw-bold active" active-class="fw-bold active">Ustawienia</router-link>
+            <router-link class="nav-link" to="/ustawienia" exact-active-class="fw-bold active"
+              active-class="fw-bold active">Ustawienia</router-link>
           </li>
+          <li class="nav-item weather-info mx-auto">
+            <div v-if="weather" class="d-flex align-items-center justify-content-center">
+              <span class="city-name me-2">{{ weather.city }}</span>
+              <div class="weather-icon-wrapper">
+                <img :src="weather.icon" alt="Ikona pogody" class="weather-icon">
+              </div>
+              <span class="temperature">{{ parseFloat(weather.temperature).toFixed(1) }}°C</span>
+            </div>
+            <div v-else class="loading-text">Ładowanie pogody...</div>
+          </li>
+
+
         </ul>
       </div>
     </div>
@@ -57,22 +58,48 @@ export default {
   },
   methods: {
     async getWeather() {
-      const city = 'Warszawa'; // Możesz tu ustawić miasto, które chcesz wyświetlić domyślnie
+      // Pobierz lokalizację z ciasteczka
+      const cookieCity = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('selectedCity='))
+        ?.split('=')[1];
+
+      let city = decodeURIComponent(cookieCity || ''); // Domyślna lokalizacja: Warszawa
+
+      if (!city) {
+        try {
+          const gpsLocation = await this.fetchGPSLocation(); // Uzyskaj lokalizację z GPS
+          city = gpsLocation.city || 'Warszawa'; // Domyślnie Warszawa, jeśli brak miasta
+        } catch (error) {
+          console.error('Nie udało się pobrać lokalizacji GPS:', error);
+          city = 'Warszawa'; // Jeśli GPS zawiedzie, ustaw domyślne miasto
+        }
+      }
 
       try {
-        const weatherData = await fetchWeather(city); // Używamy Twojej funkcji do pobrania pogody
-        
+        const weatherData = await fetchWeather(city);
+
         if (weatherData) {
           this.weather = {
-            city: weatherData.city,
+            city: city,
             temperature: weatherData.temp,
-            icon: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`, // Jeśli masz ikonę, możesz zmienić tę linijkę
+            icon: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`,
           };
         } else {
           console.error('Błąd pobierania danych pogodowych');
         }
       } catch (error) {
         console.error('Błąd podczas pobierania pogody:', error);
+      }
+    },
+
+    // Funkcja do pobierania lokalizacji GPS
+    async fetchGPSLocation() {
+      try {
+        const { city } = await import('../LocationService.js').then(module => module.fetchCurrentLocation());
+        return { city };
+      } catch (error) {
+        throw new Error('Błąd uzyskiwania lokalizacji GPS');
       }
     },
   },
@@ -86,15 +113,19 @@ export default {
 }
 
 .navbar-nav {
-  display: flex; /* Zmieniamy na flex, aby elementy były obok siebie */
-  flex-direction: row; /* Wyświetlamy elementy w wierszu */
-  align-items: center; /* Wyrównanie w pionie */
-  margin: 0; 
-  padding: 0; 
+  display: flex;
+  /* Zmieniamy na flex, aby elementy były obok siebie */
+  flex-direction: row;
+  /* Wyświetlamy elementy w wierszu */
+  align-items: center;
+  /* Wyrównanie w pionie */
+  margin: 0;
+  padding: 0;
 }
 
 .navbar-nav .nav-item {
-  margin: 0 10px; /* Odstępy między elementami */
+  margin: 0 10px;
+  /* Odstępy między elementami */
 }
 
 .nav-link {
@@ -123,7 +154,7 @@ export default {
 
 /* Grubsze podkreślenie niebieskie dla aktywnego linku z animacją od środka */
 .nav-link.active::after {
-  width: 50%; 
+  width: 50%;
   left: 50%;
   height: 3px;
   background-color: #06354C;
@@ -148,13 +179,42 @@ export default {
   margin: 0 auto;
 }
 
+.weather-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: #cecece; /* Jaśniejszy odcień szarości */
+  border-radius: 50%; /* Delikatne zaokrąglenie */
+  margin-right: 8px; /* Margines między ikoną a tekstem */
+}
+
 .weather-icon {
-  width: 30px;
-  height: 30px;
+  width: 50px;
+  height: 50px;
+
 }
 
 .weather-info span {
   margin-left: 8px;
   font-weight: bold;
+}
+
+.city-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+
+.temperature {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #007bff;
+}
+
+.loading-text {
+  font-size: 0.9rem;
+  color: #666;
 }
 </style>
