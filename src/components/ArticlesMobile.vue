@@ -233,7 +233,7 @@ export default {
     background-color: #ffffff;
   }
   .error-image {
-    width: 50%;
+    width: 40%;
     height: auto;
     max-height: 25rem;
     object-fit: contain;
