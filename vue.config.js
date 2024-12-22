@@ -20,7 +20,7 @@ module.exports = defineConfig({
       display: 'standalone',
       lang: 'pl',
       orientation: 'portrait',
-      backgroundColor: "#0dcaf0",
+      themeColor: "#0dcaf0",
       icons: [
         {
           src: './img/icons/android-chrome-192x192.png',
