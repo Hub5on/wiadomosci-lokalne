@@ -1,8 +1,7 @@
-const { defineConfig } = require('@vue/cli-service')
-const {createProxyMiddleware} = require('http-proxy-middleware')
-module.exports = {
+const { defineConfig } = require('@vue/cli-service');
+module.exports = defineConfig({
   transpileDependencies: [
-    'vuetify' 
+    'vuetify',
   ],
   devServer: {
     port: 3001,
@@ -10,19 +9,19 @@ module.exports = {
       '/api': {
         target: 'http://localhost:3000', // Adres Twojego serwera backendowego
         changeOrigin: true,
-        
       }
     }
-  }
-  ,pwa:{
+  },
+  pwa: {
     manifestOptions: {
-      name: 'Wiadomości Lokalne',
-      short_name: 'Wiadomości Lokalne',
-      description: 'Wiadomości Lokalne',
+      name: 'Wiadomości Lokalne',
+      short_name: 'Wiadomości Lokalne',
+      description: 'Wiadomości Lokalne',
       display: 'standalone',
       lang: 'pl',
       orientation: 'portrait',
-      icons:[
+      backgroundColor: "#0dcaf0",
+      icons: [
         {
           src: './img/icons/android-chrome-192x192.png',
           sizes: '192x192',
@@ -34,7 +33,7 @@ module.exports = {
           src: './img/icons/android-chrome-512x512.png',
           sizes: '512x512',
           type: 'image/png',
-          "form_factor": "wide"
+          form_factor: 'wide'
         },
         {
           src: './img/icons/android-chrome-512x512.png',
@@ -44,4 +43,4 @@ module.exports = {
       ]
     }
   }
-}
+});
