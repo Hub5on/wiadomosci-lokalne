@@ -130,15 +130,16 @@ app.get('/api/proxy', async (req, res) => {
     const url = req.query.url;
 
     if (!url || !url.startsWith('http')) {
+      console.error('Invalid URL:', url); // Dodaj logowanie nieprawidłowego URL
       return res.status(400).json({ message: 'Invalid URL' });
     }
+
+    console.log('Fetching URL:', url); // Logowanie próby pobrania URL
 
     const response = await fetch(url);
 
     if (!response.ok) {
-      if (response.status === 404) {
-        return res.send('');
-      }
+      console.error('Error fetching resource:', response.statusText);
       return res.status(response.status).send(`Error: ${response.statusText}`);
     }
 
@@ -149,6 +150,7 @@ app.get('/api/proxy', async (req, res) => {
     res.status(500).send('An error occurred while fetching the resource');
   }
 });
+
 
 app.get('/api/get-weather', async (req, res) => {
   const WEATHER_API = process.env.WEATHER_API; // Access the API key securely on the server side
