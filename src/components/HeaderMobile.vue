@@ -116,6 +116,6 @@ export default {
 
 .loading-text {
   font-size: 0.9rem;
-  color: #666;
+
 }
 </style>

@@ -95,16 +95,16 @@ export default {
     saveCity() {
       let locationToSave = '';
       if (this.locationSource === 'gps' && this.gpsLocation) {
-        locationToSave = this.gpsLocation;
+        locationToSave = this.extractCityFromLocation(this.gpsLocation);
       } else if (this.locationSource === 'list' && this.selectedCity) {
         locationToSave = this.selectedCity.name;
       }
 
       if (locationToSave) {
-        // Zapisujemy tylko nazwę miasta (usuwając polskie znaki)
+        // Zapisujemy tylko miejscowość (usuwamy polskie znaki)
         const normalizedCity = locationToSave;
         document.cookie = `selectedCity=${encodeURIComponent(normalizedCity)}; path=/;`;
-        alert(`Zapisano miasto: ${locationToSave}`);
+        alert(`Zapisano miejscowość: ${locationToSave}`);
       } else {
         alert('Nie wybrano lokalizacji. Wybierz lokalizację z listy lub z GPS.');
       }
@@ -121,18 +121,41 @@ export default {
       return str.split('').map(char => polishChars[char] || char).join('');
     },
 
-    // Uzyskiwanie lokalizacji GPS
+    // Uzyskiwanie lokalizacji GPS i konwertowanie jej na nazwę miejscowości
     getGPSLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
+        navigator.geolocation.getCurrentPosition(async (position) => {
           const { latitude, longitude } = position.coords;
           this.gpsLocation = `Lat: ${latitude}, Lon: ${longitude}`;
+
+          // Geokodowanie współrzędnych na pełną nazwę lokalizacji
+          const apiKey = '46bb0281a415476fae5ca22fed3e4d75'; // Wstaw swój klucz API
+          const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}&language=pl&no_annotations=1`;
+
+          try {
+            const response = await fetch(endpoint);
+            const data = await response.json();
+            if (data.results && data.results.length) {
+              const city = data.results[0].components.city || data.results[0].components.town || data.results[0].components.village;
+              this.gpsLocation = city; // Zaktualizuj gpsLocation na nazwę miejscowości
+            } else {
+              this.gpsLocation = "Nie znaleziono lokalizacji.";
+            }
+          } catch (error) {
+            console.error('Błąd geokodowania:', error);
+          }
         }, (error) => {
           console.error('Błąd uzyskiwania lokalizacji GPS:', error);
         });
       } else {
         alert('Geolokalizacja nie jest dostępna w tej przeglądarce.');
       }
+    },
+
+    // Funkcja wyodrębniająca tylko nazwę miejscowości
+    extractCityFromLocation(location) {
+      const cityMatch = location.match(/^[^,]+/); // Dopasowanie do pierwszego słowa przed przecinkiem
+      return cityMatch ? cityMatch[0] : '';
     },
   },
 };
