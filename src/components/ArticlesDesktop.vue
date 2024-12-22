@@ -96,6 +96,7 @@ export default {
         // Jeśli strona nie istnieje, próbujemy archiwalną wersję URL
         if (isPageDeleted) {
           const archivedLink = this.replaceLink(link);  // Używamy tutaj replaceLink, aby zamienić URL
+          console.log("Próba z archiwalnym linkiem:", archivedLink);
 
           const archiveHtml = await this.fetchHtml(archivedLink);
           isPageDeleted = this.isPageDeleted(archiveHtml);

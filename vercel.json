@@ -7,10 +7,6 @@
       {
         "source": "/(.*)",
         "destination": "/"
-      },
-      {
-        "source": "/api/proxy",
-        "destination": "/api/index.js"
       }
     ]
   }
