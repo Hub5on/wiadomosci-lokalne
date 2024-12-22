@@ -106,6 +106,7 @@ export default {
       } else {
         alert('Nie wybrano lokalizacji. Wybierz lokalizację z listy lub z GPS.');
       }
+      window.location.reload();
     },
 
     // Funkcja do usuwania polskich znaków
