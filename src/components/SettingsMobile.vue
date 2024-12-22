@@ -112,14 +112,37 @@ export default {
     },
 
     // Uzyskiwanie lokalizacji GPS
-    getGPSLocation() {
+    async getGPSLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-          const { latitude, longitude } = position.coords;
-          this.gpsLocation = `Lat: ${latitude}, Lon: ${longitude}`;
-        }, (error) => {
-          console.error('Błąd uzyskiwania lokalizacji GPS:', error);
-        });
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            // Użycie API do uzyskania nazwy miasta na podstawie współrzędnych GPS
+            const apiKey = '46bb0281a415476fae5ca22fed3e4d75'; // Wstaw swój klucz API
+            const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=${apiKey}&language=pl&no_annotations=1`;
+
+            try {
+              const response = await fetch(endpoint);
+              const data = await response.json();
+
+              if (data.results && data.results.length) {
+                // Uzyskanie nazwy miasta z odpowiedzi
+                const city = data.results[0].components.city || data.results[0].components.town || data.results[0].components.village;
+                this.gpsLocation = city ? city : 'Nieznana lokalizacja';
+              } else {
+                console.error('Nie udało się uzyskać pełnej lokalizacji');
+                this.gpsLocation = 'Nieznana lokalizacja';
+              }
+            } catch (error) {
+              console.error('Błąd podczas geokodowania:', error);
+              this.gpsLocation = 'Nie udało się uzyskać lokalizacji';
+            }
+          },
+          (error) => {
+            console.error('Błąd uzyskiwania lokalizacji GPS:', error);
+            this.gpsLocation = 'Nie udało się uzyskać lokalizacji';
+          }
+        );
       } else {
         alert('Geolokalizacja nie jest dostępna w tej przeglądarce.');
       }
