@@ -1,40 +1,42 @@
 <template>
-  <div id="app">
+  <div id="app" class="container mt-5">
     <!-- Przełącznik między GPS a listą -->
-    <div>
-      <label for="location-source">Wybierz sposób pozyskania lokalizacji:</label>
-      <select v-model="locationSource" id="location-source">
+    <div class="mb-3">
+      <label for="location-source" class="form-label">Wybierz sposób pozyskania lokalizacji:</label>
+      <select v-model="locationSource" id="location-source" class="form-select">
         <option value="gps">Lokalizacja GPS</option>
         <option value="list">Wybór z listy</option>
       </select>
     </div>
 
     <!-- Wyszukiwarka miast - tylko aktywna, gdy "list" jest wybrany -->
-    <div v-if="locationSource === 'list'">
+    <div v-if="locationSource === 'list'" class="mb-3">
+      <label for="query" class="form-label">Lokalizacja:</label>
       <input
         type="text"
         v-model="query"
         @input="getLocationSuggestions"
         placeholder="Wpisz nazwę miasta lub lokalizacji..."
+        class="form-control"
       />
-      <ul v-if="filteredCities.length" class="city-list">
+      <ul v-if="filteredCities.length" class="list-group mt-3">
         <li
           v-for="(city, index) in filteredCities"
           :key="index"
           @click="selectCity(city)"
-          class="city-item"
+          class="list-group-item list-group-item-action"
         >
           {{ city.formatted }}
         </li>
       </ul>
-      <button @click="saveCity" class="save-button">Zapisz</button>
+      <button @click="saveCity" class="btn btn-primary w-100 mt-3">Zapisz</button>
     </div>
 
     <!-- Pokazanie lokalizacji z GPS - tylko aktywne, gdy "gps" jest wybrane -->
-    <div v-if="locationSource === 'gps'">
-      <button @click="getGPSLocation" class="save-button">Uzyskaj lokalizację GPS</button>
-      <p v-if="gpsLocation">Twoja lokalizacja: {{ gpsLocation }}</p>
-      <button @click="saveCity" class="save-button" v-if="gpsLocation">Zapisz lokalizację GPS</button>
+    <div v-if="locationSource === 'gps'" class="mb-3">
+      <button @click="getGPSLocation" class="btn btn-primary w-100">Uzyskaj lokalizację GPS</button>
+      <p v-if="gpsLocation" class="mt-3">Twoja lokalizacja: {{ gpsLocation }}</p>
+      <button @click="saveCity" class="btn btn-success w-100 mt-3" v-if="gpsLocation">Zapisz lokalizację GPS</button>
     </div>
   </div>
 </template>
@@ -140,49 +142,29 @@ export default {
 #app {
   font-family: Arial, sans-serif;
   padding: 20px;
-  max-width: 400px;
+  max-width: 500px;
   margin: auto;
 }
 
-input {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  margin-bottom: 10px;
+.input-group {
+  margin-bottom: 1rem;
 }
 
-.city-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  border: 1px solid #ddd;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.city-item {
-  padding: 10px;
+.list-group-item {
   cursor: pointer;
-  border-bottom: 1px solid #ddd;
 }
 
-.city-item:hover {
-  background-color: #f0f0f0;
+.list-group-item:hover {
+  background-color: #f1f1f1;
 }
 
-.save-button {
-  width: 100%;
-  padding: 10px;
+.btn {
+  padding: 12px;
   font-size: 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  margin-top: 10px;
 }
 
-.save-button:hover {
-  background-color: #0056b3;
+.form-select {
+  padding: 0.5rem;
+  font-size: 16px;
 }
 </style>
