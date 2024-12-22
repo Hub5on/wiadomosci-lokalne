@@ -202,9 +202,11 @@ export default {
 
     // Funkcja do podmiany URL z aktualnego na archiwalny
     replaceLink(link) {
+      console.log("Oryginalny link przed zamianą:", link);
       
       if (link.includes('/aktualnosci2/aktualnosci')) {
         const archiveLink = link.replace('/aktualnosci2/aktualnosci', '/aktualnosci2/archiwum-aktualnosci');
+        console.log("Zmieniony link:", archiveLink);
         return archiveLink;
       }
       return link;
