@@ -93,8 +93,10 @@ export default {
         let isPageDeleted = this.isPageDeleted(html);
         let originalLinkUsed = link;
 
+        // Jeśli strona nie istnieje, próbujemy archiwalną wersję URL
         if (isPageDeleted) {
-          const archivedLink = link.replace('/aktualnosci/', '/archiwum-aktualnosci/');
+          const archivedLink = this.replaceLink(link);  // Używamy tutaj replaceLink, aby zamienić URL
+
           const archiveHtml = await this.fetchHtml(archivedLink);
           isPageDeleted = this.isPageDeleted(archiveHtml);
 
@@ -108,7 +110,7 @@ export default {
 
         return { imageUrl: '', isPageDeleted: true, originalLinkUsed };
       } catch (error) {
-        console.error('Error fetching image:', error);
+        console.error('Błąd przy pobieraniu obrazka:', error);
         return { imageUrl: '', isPageDeleted: true, originalLinkUsed: '' };
       }
     },
@@ -197,6 +199,16 @@ export default {
     addZeroIfNeeded(num) {
       return num < 10 ? '0' + num : num;
     },
+
+    // Funkcja do podmiany URL z aktualnego na archiwalny
+    replaceLink(link) {
+      
+      if (link.includes('/aktualnosci2/aktualnosci')) {
+        const archiveLink = link.replace('/aktualnosci2/aktualnosci', '/aktualnosci2/archiwum-aktualnosci');
+        return archiveLink;
+      }
+      return link;
+    }
   }
 };
 </script>
@@ -221,25 +233,16 @@ export default {
   height: auto;
   max-height: 30rem;
   object-fit: contain;
-  /* Zmienione na contain */
-  background-color: #ffffff;
-  /* Dodane tło dla pustych przestrzeni */
 }
 
 .img-square-or-tall {
   object-fit: contain;
-  /* Zmienione na contain */
   max-height: 30rem;
-  background-color: #ffffff;
-  /* Dodane tło dla pustych przestrzeni */
 }
 
 .img-wide {
   object-fit: contain;
-  /* Zmienione na contain */
   max-height: 30rem;
-  background-color: #ffffff;
-  /* Dodane tło dla pustych przestrzeni */
 }
 
 .article-text {
@@ -273,15 +276,11 @@ export default {
   width: 100%;
   height: auto;
   max-height: 30rem;
-  object-fit: contain;
-  background-color: #ffffff;
 }
 
 .error-image {
   width: 50%;
   height: auto;
   max-height: 25rem;
-  object-fit: contain;
-  background-color: #ffffff;
 }
 </style>
