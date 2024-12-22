@@ -3,49 +3,79 @@
     <div class="container-fluid d-flex justify-content-between align-items-center">
       <!-- Tytuł 'Aktualności' -->
       <span class="navbar-brand mb-0 h1 p-1 text-white">Aktualności</span>
-      
+
       <!-- Kontener z informacjami o pogodzie -->
-      <div v-if="weatherData" class="d-flex align-items-center">
-        <!-- Lokalizacja -->
-        <div class="text-center mx-0">{{ currentLocation.name }}</div>
-        <!-- Ikona pogody -->
-        <div class="text-center mx-0">
-          <img :src="`http://openweathermap.org/img/wn/${weatherData.icon}.png`" alt="Weather Icon">
+      <div v-if="weather" class="d-flex align-items-center justify-content-center">
+        <span class="city-name me-2">{{ weather.city }}</span>
+        <div class="weather-icon-wrapper">
+          <img :src="weather.icon" alt="Ikona pogody" class="weather-icon">
         </div>
-        <!-- Temperatura -->
-        <div class="text-center mx-1">{{ formatTemperature(weatherData.temp) }}°C</div>
+        <span class="temperature">{{ parseFloat(weather.temperature).toFixed(1) }}°C</span>
       </div>
+      <div v-else class="loading-text">Ładowanie pogody...</div>
     </div>
   </nav>
 </template>
 
 <script>
-import { fetchWeather } from './/../WeatherService';
-import { fetchCurrentLocation } from './/../LocationService';
+import { fetchWeather } from '../WeatherService.js'; // Poprawnie zaimportowany fetchWeather
 
 export default {
   name: 'HeaderMobile',
   data() {
     return {
-      weatherData: null,
-      currentLocation: null
+      weather: null,
     };
   },
-  async created() {
-    try {
-      const location = await fetchCurrentLocation();
-      this.currentLocation = location;
-      const weatherData = await fetchWeather(location.name);
-      this.weatherData = weatherData;
-    } catch (error) {
-      console.error('Błąd:', error);
-    }
+  mounted() {
+    this.getWeather();
   },
   methods: {
-    formatTemperature(temperature) {
-      return temperature.toFixed(1);
-    }
-  }
+    async getWeather() {
+      // Pobierz lokalizację z ciasteczka
+      const cookieCity = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('selectedCity='))?.split('=')[1];
+
+      let city = decodeURIComponent(cookieCity || '');
+
+      if (!city) {
+        try {
+          const gpsLocation = await this.fetchGPSLocation(); // Uzyskaj lokalizację z GPS
+          city = gpsLocation.city || 'Środa Wielkopolska';
+        } catch (error) {
+          console.error('Nie udało się pobrać lokalizacji GPS:', error);
+          city = 'Środa Wielkopolska'; // Jeśli GPS zawiedzie, ustaw domyślne miasto
+        }
+      }
+
+      try {
+        const weatherData = await fetchWeather(city);
+
+        if (weatherData) {
+          this.weather = {
+            city: city,
+            temperature: weatherData.temp,
+            icon: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`,
+          };
+        } else {
+          console.error('Błąd pobierania danych pogodowych');
+        }
+      } catch (error) {
+        console.error('Błąd podczas pobierania pogody:', error);
+      }
+    },
+
+    // Funkcja do pobierania lokalizacji GPS
+    async fetchGPSLocation() {
+      try {
+        const { city } = await import('../LocationService.js').then(module => module.fetchCurrentLocation());
+        return { city };
+      } catch (error) {
+        throw new Error('Błąd uzyskiwania lokalizacji GPS');
+      }
+    },
+  },
 };
 </script>
 
@@ -53,7 +83,39 @@ export default {
 .p-1 {
   padding: 1rem 0.5rem !important;
 }
+
 .weather-info {
   padding: 0 1rem 0 0.5rem;
+}
+
+.text-center {
+  font-size: 0.9rem;
+}
+.weather-icon {
+  width: 40px;
+  height: 40px;
+
+}
+
+.weather-info span {
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+.city-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+
+.temperature {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.loading-text {
+  font-size: 0.9rem;
+  color: #666;
 }
 </style>
