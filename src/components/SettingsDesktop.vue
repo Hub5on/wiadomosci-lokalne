@@ -100,7 +100,7 @@ export default {
 
       if (locationToSave) {
         // Zapisujemy tylko nazwę miasta (usuwając polskie znaki)
-        const normalizedCity = this.removePolishChars(locationToSave);
+        const normalizedCity = locationToSave;
         document.cookie = `selectedCity=${encodeURIComponent(normalizedCity)}; path=/;`;
         alert(`Zapisano miasto: ${locationToSave}`);
       } else {
@@ -127,7 +127,6 @@ export default {
           this.gpsLocation = `Lat: ${latitude}, Lon: ${longitude}`;
         }, (error) => {
           console.error('Błąd uzyskiwania lokalizacji GPS:', error);
-          alert('Nie udało się uzyskać lokalizacji GPS.');
         });
       } else {
         alert('Geolokalizacja nie jest dostępna w tej przeglądarce.');

@@ -64,15 +64,15 @@ export default {
         .find(row => row.startsWith('selectedCity='))
         ?.split('=')[1];
 
-      let city = decodeURIComponent(cookieCity || ''); // Domyślna lokalizacja: Warszawa
+      let city = decodeURIComponent(cookieCity || '');
 
       if (!city) {
         try {
           const gpsLocation = await this.fetchGPSLocation(); // Uzyskaj lokalizację z GPS
-          city = gpsLocation.city || 'Warszawa'; // Domyślnie Warszawa, jeśli brak miasta
+          city = gpsLocation.city || 'Środa Wielkopolska'; 
         } catch (error) {
           console.error('Nie udało się pobrać lokalizacji GPS:', error);
-          city = 'Warszawa'; // Jeśli GPS zawiedzie, ustaw domyślne miasto
+          city = 'Środa Wielkopolska'; // Jeśli GPS zawiedzie, ustaw domyślne miasto
         }
       }
 
@@ -191,8 +191,8 @@ export default {
 }
 
 .weather-icon {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
 
 }
 
