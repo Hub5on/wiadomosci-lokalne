@@ -1,7 +1,7 @@
 <template>
   <div>
     <ul class="list-group list-group-flush p-3">
-      <li class="list-group-item list-group-item-action article-item rounded-3" v-for="article in articles"
+      <li class="list-group-item list-group-item-action article-item rounded-3" v-for="article in visibleArticles"
         :key="article._id" @mousedown="handleMouseDown(article, $event)" style="cursor: pointer;">
         <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
         <div v-else-if="!article.isPageDeleted && !article.imageError">
@@ -27,6 +27,8 @@
         </div>
       </li>
     </ul>
+    <!-- Trigger do lazy loadingu -->
+    <div ref="scrollTrigger" class="scroll-trigger"></div>
   </div>
 </template>
 
@@ -35,11 +37,21 @@ export default {
   name: 'ArticleList',
   data() {
     return {
-      articles: []
+      articles: [],
+      visibleArticles: [],
+      currentBatch: 0,
+      batchSize: 5 // Liczba artykułów do załadowania na raz
     };
   },
   created() {
     this.fetchArticles();
+  },
+  mounted() {
+    window.addEventListener('scroll', this.handleScroll);
+    this.loadMoreArticles(); // Załaduj początkową partię artykułów
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
   },
   methods: {
     async fetchArticles() {
@@ -53,9 +65,34 @@ export default {
           return dateComparison !== 0 ? dateComparison : b.title.localeCompare(a.title);
         });
 
-        await Promise.all(this.articles.map(this.processArticle));
+        // Po pobraniu artykułów, ładujemy pierwszą partię
+        this.loadMoreArticles();
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
+      }
+    },
+
+    handleScroll() {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+
+      // Sprawdź, czy użytkownik zbliża się do końca strony
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        this.loadMoreArticles();
+      }
+    },
+
+    loadMoreArticles() {
+      const start = this.currentBatch * this.batchSize;
+      const end = start + this.batchSize;
+
+
+      if (start < this.articles.length) {
+        const nextBatch = this.articles.slice(start, end);
+        nextBatch.forEach(this.processArticle);
+        this.visibleArticles.push(...nextBatch);
+        this.currentBatch++;
       }
     },
 
@@ -95,7 +132,7 @@ export default {
 
         // Jeśli strona nie istnieje, próbujemy archiwalną wersję URL
         if (isPageDeleted) {
-          const archivedLink = this.replaceLink(link);  // Używamy tutaj replaceLink, aby zamienić URL
+          const archivedLink = this.replaceLink(link);
 
           const archiveHtml = await this.fetchHtml(archivedLink);
           isPageDeleted = this.isPageDeleted(archiveHtml);
@@ -179,7 +216,7 @@ export default {
 
     handleMouseDown(article, event) {
       const link = article.redirectLink;
-      console.log("Redirecting to:", link);
+      console.log('Redirecting to:', link);
 
       if (event.button === 0) {
         window.location.href = link;
@@ -200,9 +237,7 @@ export default {
       return num < 10 ? '0' + num : num;
     },
 
-    // Funkcja do podmiany URL z aktualnego na archiwalny
     replaceLink(link) {
-      
       if (link.includes('/aktualnosci2/aktualnosci')) {
         const archiveLink = link.replace('/aktualnosci2/aktualnosci', '/aktualnosci2/archiwum-aktualnosci');
         return archiveLink;
@@ -213,50 +248,9 @@ export default {
 };
 </script>
 
+
 <style>
-  .article-item img {
-    width: 100%;
-    height: auto;
-    max-height: 30rem;
-    object-fit: contain;
-    background-color: #ffffff;
-  }
-  .img-square-or-tall {
-    object-fit: contain;
-    max-height: 30rem;
-    background-color: #ffffff;
-  }
-  .img-wide {
-    object-fit: contain;
-    max-height: 30rem;
-    background-color: #ffffff;
-  }
-  .no-image-warning {
-    color: red;
-    font-weight: bold;
-    text-align: center;
-    padding: 10px 0;
-  }
-  .loading-image {
-    width: 100%;
-    height: auto;
-    max-height: 30rem;
-    object-fit: contain;
-    background-color: #ffffff;
-  }
-  .error-image {
-    width: 40%;
-    height: auto;
-    max-height: 25rem;
-    object-fit: contain;
-    background-color: #ffffff;
-  }
-  .author, .pub-date {
-    font-size: 1rem;
-  }
-  @media (max-width: 576px) {
-    .pub-date, .author {
-      font-size: 0.8rem;
-    }
-  }
+.scroll-trigger {
+  height: 1px;
+}
 </style>

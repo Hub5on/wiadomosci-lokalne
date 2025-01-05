@@ -43,18 +43,21 @@ export default {
   name: 'ArticleList',
   data() {
     return {
-      articles: [], // Pełna lista artykułów
-      visibleArticles: [], // Artykuły obecnie widoczne na stronie
-      batchSize: 5, // Liczba artykułów do załadowania na raz
-      currentBatch: 0, // Numer obecnie załadowanej partii
-      observer: null // Obiekt IntersectionObserver
+      articles: [],
+      visibleArticles: [],
+      currentBatch: 0,
+      batchSize: 5 // Liczba artykułów do załadowania na raz
     };
   },
   created() {
     this.fetchArticles();
   },
   mounted() {
-    this.initScrollObserver();
+    window.addEventListener('scroll', this.handleScroll);
+    this.loadMoreArticles(); // Załaduj początkową partię artykułów
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
   },
   methods: {
     async fetchArticles() {
@@ -68,21 +71,35 @@ export default {
           return dateComparison !== 0 ? dateComparison : b.title.localeCompare(a.title);
         });
 
-        // Załaduj początkową partię artykułów
+        // Po pobraniu artykułów, ładujemy pierwszą partię
         this.loadMoreArticles();
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
 
+    handleScroll() {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+
+      // Sprawdź, czy użytkownik zbliża się do końca strony
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        this.loadMoreArticles();
+      }
+    },
+
     loadMoreArticles() {
       const start = this.currentBatch * this.batchSize;
       const end = start + this.batchSize;
-      const nextBatch = this.articles.slice(start, end);
 
-      nextBatch.forEach(this.processArticle);
-      this.visibleArticles.push(...nextBatch);
-      this.currentBatch++;
+
+      if (start < this.articles.length) {
+        const nextBatch = this.articles.slice(start, end);
+        nextBatch.forEach(this.processArticle);
+        this.visibleArticles.push(...nextBatch);
+        this.currentBatch++;
+      }
     },
 
     async processArticle(article) {
@@ -113,25 +130,6 @@ export default {
       article.isLoading = false;
     },
 
-    initScrollObserver() {
-      const options = {
-        root: null, // Obserwuj w obrębie całego widoku
-        rootMargin: '0px',
-        threshold: 0.1 // Uruchom ładowanie, gdy element jest w 10% widoczny
-      };
-
-      this.observer = new IntersectionObserver((entries) => {
-        const target = entries[0];
-        if (target.isIntersecting) {
-          this.loadMoreArticles();
-        }
-      }, options);
-
-      if (this.$refs.scrollTrigger) {
-        this.observer.observe(this.$refs.scrollTrigger);
-      }
-    },
-
     async fetchFirstImage(link) {
       try {
         const html = await this.fetchHtml(link);
@@ -140,8 +138,7 @@ export default {
 
         // Jeśli strona nie istnieje, próbujemy archiwalną wersję URL
         if (isPageDeleted) {
-          const archivedLink = this.replaceLink(link); // Używamy tutaj replaceLink, aby zamienić URL
-          console.log("Próba z archiwalnym linkiem:", archivedLink);
+          const archivedLink = this.replaceLink(link);
 
           const archiveHtml = await this.fetchHtml(archivedLink);
           isPageDeleted = this.isPageDeleted(archiveHtml);
@@ -225,7 +222,7 @@ export default {
 
     handleMouseDown(article, event) {
       const link = article.redirectLink;
-      console.log("Redirecting to:", link);
+      console.log('Redirecting to:', link);
 
       if (event.button === 0) {
         window.location.href = link;
@@ -247,19 +244,11 @@ export default {
     },
 
     replaceLink(link) {
-      console.log("Oryginalny link przed zamianą:", link);
-
       if (link.includes('/aktualnosci2/aktualnosci')) {
         const archiveLink = link.replace('/aktualnosci2/aktualnosci', '/aktualnosci2/archiwum-aktualnosci');
-        console.log("Zmieniony link:", archiveLink);
         return archiveLink;
       }
       return link;
-    }
-  },
-  beforeUnmount() {
-    if (this.observer && this.$refs.scrollTrigger) {
-      this.observer.unobserve(this.$refs.scrollTrigger);
     }
   }
 };
