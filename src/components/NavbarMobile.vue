@@ -3,22 +3,23 @@
     <div class="d-flex justify-content-between align-items-center py-2">
       <div class="text-center px-2">
         <router-link to="/">
-          <i class="bi bi-house-door text-dark" style="font-size: 24px;"></i>
+          <i :class="['bi', currentRoute === '/' ? 'bi-house-door-fill' : 'bi-house-door', 'text-dark']"></i>
         </router-link>
       </div>
       <div class="text-center px-2">
         <router-link to="/kalendarz">
-          <i class="bi bi-calendar text-dark" style="font-size: 24px;"></i>
+          <!-- Dynamiczna zmiana klasy ikony na podstawie aktywnej ścieżki -->
+          <i :class="['bi', currentRoute === '/kalendarz' ? 'bi-calendar-fill' : 'bi-calendar', 'text-dark']"></i>
         </router-link>
       </div>
       <div class="text-center px-2">
         <router-link to="/powiadomienia">
-          <i class="bi bi-bell text-dark" style="font-size: 24px;"></i>
+          <i :class="['bi', currentRoute === '/powiadomienia' ? 'bi-bell-fill' : 'bi-bell', 'text-dark']"></i>
         </router-link>
       </div>
       <div class="text-center px-2">
         <router-link to="/ustawienia">
-          <i class="bi bi-gear text-dark" style="font-size: 24px;"></i>
+          <i :class="['bi', currentRoute === '/ustawienia' ? 'bi-gear-fill' : 'bi-gear', 'text-dark']"></i>
         </router-link>
       </div>
     </div>
@@ -28,8 +29,14 @@
 <script>
 export default {
   name: 'NavbarMobile',
+  computed: {
+    currentRoute() {
+      return this.$route.path;
+    }
+  }
 }
 </script>
+
 
 <style scoped>
 .navbar-mobile {
