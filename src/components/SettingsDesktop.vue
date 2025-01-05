@@ -37,22 +37,43 @@
       <button @click="getGPSLocation" class="btn btn-primary w-100">Uzyskaj lokalizację GPS</button>
       <p v-if="gpsLocation" class="mt-3">Twoja lokalizacja: {{ gpsLocation }}</p>
       <button @click="saveCity" class="btn btn-success w-100 mt-3" v-if="gpsLocation">Zapisz lokalizację GPS</button>
+      <div class="mb-3">
+      <button @click="toggleTheme" class="btn btn-secondary w-100 mt-3">
+        Zmień motyw (Aktualny: {{ theme === 'light' ? 'Jasny' : 'Ciemny' }})
+      </button>
     </div>
+    </div>
+    
   </div>
+  
 </template>
+
 
 <script>
 export default {
   data() {
-    return {
-      query: '',
-      filteredCities: [],
-      selectedCity: '',
-      locationSource: 'gps', // domyślnie GPS
-      gpsLocation: null, // Przechowywanie lokalizacji GPS
-    };
-  },
+  return {
+    query: '',
+    filteredCities: [],
+    selectedCity: '',
+    locationSource: 'gps', // domyślnie GPS
+    gpsLocation: null, // Przechowywanie lokalizacji GPS
+    theme: localStorage.getItem('theme') || 'light', // Ustaw domyślny motyw
+  };
+},
+mounted() {
+  // Ustaw motyw na podstawie zapisanych ustawień w localStorage
+  const savedTheme = this.theme;
+  document.body.setAttribute('data-theme', savedTheme);
+},
   methods: {
+    toggleTheme() {
+    this.theme = this.theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', this.theme); // Zapisz motyw w localStorage
+
+    // Zaktualizuj klasę na body, aby zmienić styl
+    document.body.setAttribute('data-theme', this.theme);
+  },
     // Pobieranie sugestii miast
     async getLocationSuggestions() {
       if (this.query.trim() === '') {
