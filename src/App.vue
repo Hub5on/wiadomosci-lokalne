@@ -61,4 +61,20 @@ export default {
 body {
   font-family: 'Lato', sans-serif;
 }
+:root {
+  --background-color-light: white;
+  --text-color-light: black;
+  --background-color-dark: #121212;
+  --text-color-dark: white;
+}
+
+body[data-theme='light'] {
+  background-color: var(--background-color-light);
+  color: var(--text-color-light);
+}
+
+body[data-theme='dark'] {
+  background-color: var(--background-color-dark);
+  color: var(--text-color-dark);
+}
 </style>
