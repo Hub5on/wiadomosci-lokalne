@@ -1,8 +1,12 @@
 <template>
   <div class="content">
     <ul class="list-group list-group-flush p-3 one-article">
-      <li class="list-group-item list-group-item-action article-item rounded-3" v-for="article in articles"
-        :key="article._id" @mousedown="handleMouseDown(article, $event)" style="cursor: pointer;">
+      <li class="list-group-item list-group-item-action article-item rounded-3" 
+          v-for="article in visibleArticles"
+          :key="article._id" 
+          @mousedown="handleMouseDown(article, $event)" 
+          style="cursor: pointer;">
+        
         <img v-lazy="article.loadingImageUrl" alt="Loading Image" v-if="article.isLoading" class="loading-image">
         <div v-else-if="!article.isPageDeleted && !article.imageError">
           <img v-lazy="article.imageUrl" alt="Article Image" :class="article.imageClass">
@@ -27,19 +31,30 @@
         </div>
       </li>
     </ul>
+
+    <!-- Strażnik do ładowania kolejnych artykułów -->
+    <div ref="scrollTrigger" class="scroll-trigger"></div>
   </div>
 </template>
+
 
 <script>
 export default {
   name: 'ArticleList',
   data() {
     return {
-      articles: []
+      articles: [], // Pełna lista artykułów
+      visibleArticles: [], // Artykuły obecnie widoczne na stronie
+      batchSize: 5, // Liczba artykułów do załadowania na raz
+      currentBatch: 0, // Numer obecnie załadowanej partii
+      observer: null // Obiekt IntersectionObserver
     };
   },
   created() {
     this.fetchArticles();
+  },
+  mounted() {
+    this.initScrollObserver();
   },
   methods: {
     async fetchArticles() {
@@ -53,10 +68,21 @@ export default {
           return dateComparison !== 0 ? dateComparison : b.title.localeCompare(a.title);
         });
 
-        await Promise.all(this.articles.map(this.processArticle));
+        // Załaduj początkową partię artykułów
+        this.loadMoreArticles();
       } catch (error) {
         console.error('Błąd pobierania artykułów:', error);
       }
+    },
+
+    loadMoreArticles() {
+      const start = this.currentBatch * this.batchSize;
+      const end = start + this.batchSize;
+      const nextBatch = this.articles.slice(start, end);
+
+      nextBatch.forEach(this.processArticle);
+      this.visibleArticles.push(...nextBatch);
+      this.currentBatch++;
     },
 
     async processArticle(article) {
@@ -87,6 +113,25 @@ export default {
       article.isLoading = false;
     },
 
+    initScrollObserver() {
+      const options = {
+        root: null, // Obserwuj w obrębie całego widoku
+        rootMargin: '0px',
+        threshold: 0.1 // Uruchom ładowanie, gdy element jest w 10% widoczny
+      };
+
+      this.observer = new IntersectionObserver((entries) => {
+        const target = entries[0];
+        if (target.isIntersecting) {
+          this.loadMoreArticles();
+        }
+      }, options);
+
+      if (this.$refs.scrollTrigger) {
+        this.observer.observe(this.$refs.scrollTrigger);
+      }
+    },
+
     async fetchFirstImage(link) {
       try {
         const html = await this.fetchHtml(link);
@@ -95,7 +140,7 @@ export default {
 
         // Jeśli strona nie istnieje, próbujemy archiwalną wersję URL
         if (isPageDeleted) {
-          const archivedLink = this.replaceLink(link);  // Używamy tutaj replaceLink, aby zamienić URL
+          const archivedLink = this.replaceLink(link); // Używamy tutaj replaceLink, aby zamienić URL
           console.log("Próba z archiwalnym linkiem:", archivedLink);
 
           const archiveHtml = await this.fetchHtml(archivedLink);
@@ -201,10 +246,9 @@ export default {
       return num < 10 ? '0' + num : num;
     },
 
-    // Funkcja do podmiany URL z aktualnego na archiwalny
     replaceLink(link) {
       console.log("Oryginalny link przed zamianą:", link);
-      
+
       if (link.includes('/aktualnosci2/aktualnosci')) {
         const archiveLink = link.replace('/aktualnosci2/aktualnosci', '/aktualnosci2/archiwum-aktualnosci');
         console.log("Zmieniony link:", archiveLink);
@@ -212,11 +256,23 @@ export default {
       }
       return link;
     }
+  },
+  beforeUnmount() {
+    if (this.observer && this.$refs.scrollTrigger) {
+      this.observer.unobserve(this.$refs.scrollTrigger);
+    }
   }
 };
 </script>
 
+
 <style>
+.scroll-trigger {
+  height: 2px;
+  width: 100%;
+  background-color: transparent;
+}
+
 .content {
   padding: 0 25%;
   background-color: #f0f0f0;
