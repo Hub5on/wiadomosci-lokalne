@@ -253,4 +253,10 @@ export default {
 .scroll-trigger {
   height: 1px;
 }
+.article-item img {
+  max-height: 300px; /* Zmieniaj wartość w zależności od preferencji */
+  width: 100%; /* Obrazki będą dopasowane do szerokości kontenera */
+  object-fit: contain; /* Zachowanie proporcji obrazu */
+}
+
 </style>

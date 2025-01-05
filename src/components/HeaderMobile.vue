@@ -53,16 +53,17 @@ export default {
         const weatherData = await fetchWeather(city);
 
         if (weatherData) {
+          if (city === 'Środa Wielkopolska') {
+            city = 'Środa Wlkp.';
+          }
           this.weather = {
             city: city,
             temperature: weatherData.temp,
             icon: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`,
           };
-        } else {
-          console.error('Błąd pobierania danych pogodowych');
         }
       } catch (error) {
-        console.error('Błąd podczas pobierania pogody:', error);
+        console.error('Nie udało się pobrać danych pogodowych:', error);
       }
     },
 
