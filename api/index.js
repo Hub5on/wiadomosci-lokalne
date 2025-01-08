@@ -29,7 +29,8 @@ const articleSchema = new mongoose.Schema({
   link: String,
   description: String,
   pubDate: Date,
-  creator: String
+  creator: String,
+  category: String
 });
 const Article = mongoose.model('Article', articleSchema);
 
@@ -75,7 +76,8 @@ app.get('/api/scrape-rss', async (req, res) => {
 
       const creator = item.creator.trim(); // Usunięcie spacji przed i po treści 'creator'
       const description = item.contentSnippet.trim(); // Usunięcie spacji przed i po treści 'description'
-
+      const category = getCategory(item.title, description);
+      
       // Sprawdź, czy artykuł o tym samym tytule, dacie publikacji, opisie i twórcy już istnieje
       const existingArticle = await Article.findOne({
         title: item.title,
@@ -90,7 +92,8 @@ app.get('/api/scrape-rss', async (req, res) => {
           link: item.link,
           description: description,
           pubDate: new Date(formattedDate),
-          creator: creator
+          creator: creator,
+          category: category
         });
 
         // Zapisz artykuł do bazy danych
@@ -178,5 +181,103 @@ app.get('/api/get-weather', async (req, res) => {
     res.status(500).json({ message: 'Error fetching weather data' });
   }
 });
+
+// Funkcja do przypisywania kategorii
+function getCategory(title, description) {
+  const content = `${title} ${description}`.toLowerCase();
+
+  // 1. Wydarzenie: data i godzina
+  const eventPattern = /\b\d{1,2}\s(?:stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia)\b.*\b(godz\.?|o\s)?\d{1,2}([:.]\d{2})?/;
+
+  // 2. Ogłoszenie: godzina od-do lub data od-do
+  const announcementPattern = /\bod\b.*(?:godz\.?\s?\d{1,2}([:.]\d{2})?\sdo\s|[0-9]{1,2}\s(?:stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia)\b.*do\s)/;
+
+  // 3. Informacja: tylko data
+  const infoPattern = /\b\d{1,2}\s(?:stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia)\b|\b\d{4}\b/;
+
+  // 4. Sprawdzanie warunków
+  if (eventPattern.test(content)) {
+    return 'wydarzenie';
+  } else if (announcementPattern.test(content)) {
+    return 'ogłoszenie';
+  } else if (infoPattern.test(content)) {
+    return 'informacja';
+  } else {
+    return 'inne';
+  }
+}
+
+// Endpoint testowy do wyświetlania kategorii w logach
+app.get('/api/test-categories', async (req, res) => {
+  try {
+    const feed = await parser.parseURL('https://www.powiatsredzki.pl/powiatsredzki/kanal-rss-ssi.xml');
+    console.log('--- TESTOWANIE PRZYPISYWANIA KATEGORII ---');
+
+    for (const item of feed.items) {
+      const title = item.title.trim();
+      const description = item.contentSnippet.trim();
+      const category = getCategory(title, description);
+
+      // Wyświetlenie w logach
+      console.log(`Tytuł: ${title}`);
+      console.log(`Opis: ${description}`);
+      console.log(`Kategoria: ${category}`);
+      console.log('------------------------------------------');
+    }
+
+    res.json({ message: 'Testowanie zakończone - sprawdź logi serwera.' });
+  } catch (error) {
+    console.error('Błąd testowania kategorii:', error);
+    res.status(500).json({ message: 'Wystąpił błąd podczas testowania kategorii' });
+  }
+});
+
+// Endpoint do aktualizacji kategorii artykułów
+/* app.get('/api/update-categories', async (req, res) => {
+  try {
+    // Znajdź artykuły, które nie mają kategorii (category === null, pusty lub brak kategorii)
+    const articlesWithoutCategory = await Article.find({
+      $or: [
+        { category: { $exists: false } },
+        { category: null },
+        { category: "" }
+      ]
+    });
+
+    console.log(`Znaleziono ${articlesWithoutCategory.length} artykułów bez kategorii.`);
+
+    let updatedCount = 0;
+
+    // Iteruj przez artykuły i przypisuj kategorię
+    for (const article of articlesWithoutCategory) {
+      const title = article.title || '';
+      const description = article.description || '';
+      const category = getCategory(title, description); // Przypisz kategorię na podstawie tytułu i opisu
+
+      // Zaktualizuj kategorię artykułu w bazie
+      const result = await Article.updateOne(
+        { _id: article._id }, // Szukamy artykułu po jego _id
+        { $set: { category } } // Aktualizujemy kategorię
+      );
+
+      // Jeśli artykuł został zaktualizowany, zwiększ licznik
+      if (result.modifiedCount > 0) {
+        updatedCount++;
+      }
+
+      console.log(`Tytuł: ${title}`);
+      console.log(`Kategoria: ${category}`);
+      console.log('------------------------------------------');
+    }
+
+    // Zwróć odpowiedź z informacją o liczbie zaktualizowanych artykułów
+    res.json({ message: `Zaktualizowano ${updatedCount} artykułów.` });
+  } catch (error) {
+    console.error('Błąd podczas aktualizacji kategorii:', error);
+    res.status(500).json({ message: 'Wystąpił błąd podczas aktualizacji kategorii' });
+  }
+}); */
+
+
 
 module.exports = app;
