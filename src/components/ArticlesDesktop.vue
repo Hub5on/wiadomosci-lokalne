@@ -1,5 +1,14 @@
 <template>
   <div class="content">
+    <div class="categories">
+      <button active-class="active" :class="{ active: selectedCategory === category }"
+        v-for="category in categories"
+        :key="category"
+        @click="filterByCategory(category)"
+      >
+        {{ category }}
+      </button>
+    </div>
     <ul class="list-group list-group-flush p-3 one-article">
       <li class="list-group-item list-group-item-action article-item rounded-3" 
           v-for="article in visibleArticles"
@@ -23,7 +32,7 @@
               </p>
             </div>
             <div class="col-md-6">
-              <p class="author"><strong>Autor:</strong> {{ article.creator }}</p>
+              <p class="author"><strong>Autor:</strong> {{ article.creator }} {{ article.category }}</p>
             </div>
           </div>
           <h2 class="mb-3">{{ article.title }}</h2>
@@ -46,7 +55,9 @@ export default {
       articles: [],
       visibleArticles: [],
       currentBatch: 0,
-      batchSize: 5 // Liczba artykułów do załadowania na raz
+      batchSize: 5, // Liczba artykułów do załadowania na raz
+      categories: ['Wszystkie', 'wydarzenie', 'ogłoszenie', 'informacja', 'inne'],
+      selectedCategory: 'Wszystkie'
     };
   },
   created() {
@@ -77,6 +88,24 @@ export default {
         console.error('Błąd pobierania artykułów:', error);
       }
     },
+    filterByCategory(category) {
+  this.selectedCategory = category;
+  this.currentBatch = 0;
+  this.visibleArticles = []; // Resetuj widoczne artykuły
+
+  // Wybieramy artykuły z wybranej kategorii
+  if (category === 'Wszystkie') {
+    this.loadMoreArticles(); // Ładuj wszystkie artykuły, jeśli wybrano "Wszystkie"
+  } else {
+    // Filtrowanie artykułów w zależności od wybranej kategorii
+    const filteredArticles = this.articles.filter(article => article.category === category);
+    this.visibleArticles = filteredArticles.slice(0, this.batchSize);
+    this.currentBatch = Math.ceil(this.visibleArticles.length / this.batchSize);
+
+    // Przetwarzanie zdjęć dla widocznych artykułów
+    this.visibleArticles.forEach(article => this.processArticle(article));
+  }
+},
 
     handleScroll() {
       const scrollHeight = document.documentElement.scrollHeight;
@@ -90,45 +119,57 @@ export default {
     },
 
     loadMoreArticles() {
-      const start = this.currentBatch * this.batchSize;
-      const end = start + this.batchSize;
+  const start = this.currentBatch * this.batchSize;
+  const end = start + this.batchSize;
+
+  let articlesToLoad = [];
+
+  // Jeśli wybrano "Wszystkie" ładujemy wszystkie artykuły
+  if (this.selectedCategory === 'Wszystkie') {
+    articlesToLoad = this.articles.slice(start, end);
+  } else {
+    // Filtrowanie artykułów po wybranej kategorii
+    const filteredArticles = this.articles.filter(article => article.category === this.selectedCategory);
+    articlesToLoad = filteredArticles.slice(start, end);
+  }
+
+  if (articlesToLoad.length > 0) {
+    this.visibleArticles.push(...articlesToLoad);
+    this.currentBatch++;
+
+    // Przetwarzanie zdjęć dla załadowanych artykułów
+    articlesToLoad.forEach(article => this.processArticle(article));
+  }
+},
 
 
-      if (start < this.articles.length) {
-        const nextBatch = this.articles.slice(start, end);
-        nextBatch.forEach(this.processArticle);
-        this.visibleArticles.push(...nextBatch);
-        this.currentBatch++;
-      }
-    },
+async processArticle(article) {
+  article.loadingImageUrl = '/img/loading.gif';
+  article.isLoading = true;
 
-    async processArticle(article) {
-      article.loadingImageUrl = '/img/loading.gif';
-      article.isLoading = true;
+  const { imageUrl, isPageDeleted, originalLinkUsed } = await this.fetchFirstImage(article.link);
+  const { url, className } = await this.processImage(imageUrl);
 
-      const { imageUrl, isPageDeleted, originalLinkUsed } = await this.fetchFirstImage(article.link);
-      const { url, className } = await this.processImage(imageUrl);
+  if (isPageDeleted) {
+    article.isPageDeleted = true;
+    article.imageUrl = '/img/error.png';
+    article.imageClass = 'img-wide';
+    article.imageError = true;
+    article.redirectLink = originalLinkUsed;
+  } else if (!url) {
+    article.imageUrl = '/img/temp.jpg';
+    article.imageClass = 'img-wide';
+    article.imageError = false;
+    article.redirectLink = article.link;
+  } else {
+    article.imageUrl = url;
+    article.imageClass = className;
+    article.imageError = false;
+    article.redirectLink = originalLinkUsed;
+  }
 
-      if (isPageDeleted) {
-        article.isPageDeleted = true;
-        article.imageUrl = '/img/error.png';
-        article.imageClass = 'img-wide';
-        article.imageError = true;
-        article.redirectLink = originalLinkUsed;
-      } else if (!url) {
-        article.imageUrl = '/img/temp.jpg';
-        article.imageClass = 'img-wide';
-        article.imageError = false;
-        article.redirectLink = article.link;
-      } else {
-        article.imageUrl = url;
-        article.imageClass = className;
-        article.imageError = false;
-        article.redirectLink = originalLinkUsed;
-      }
-
-      article.isLoading = false;
-    },
+  article.isLoading = false;
+},
 
     async fetchFirstImage(link) {
       try {
@@ -256,6 +297,88 @@ export default {
 
 
 <style>
+.categories {
+  display: flex;
+  gap: 1rem; /* Zmniejszamy odstęp między przyciskami */
+  justify-content: center; /* Rozciąga przyciski na całej szerokości */
+  background-color: white;
+  padding: 0 1rem 10px 1rem; /* Zmniejszamy padding, aby kontener był węższy */
+  flex-wrap: wrap; /* Pozwala na zawijanie przycisków w przypadku mniejszych ekranów */
+  border-radius: 15px; /* Zaokrąglamy rogi kontenera */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Rozmycie krawędzi kontenera */
+  width: 95%; /* Ustawiamy szerokość kontenera na 90% szerokości ekranu */
+  max-width: 1200px; /* Maksymalna szerokość kontenera */
+  margin: -10px auto auto auto; /* Wyśrodkowanie kontenera */
+}
+
+.categories button {
+  position: relative; /* Niezbędne do prawidłowego pozycjonowania pseudo-elementu */
+  padding: 0.5rem 2rem;
+  background-color: white;
+  color: black;
+  border: none;
+  cursor: pointer;
+  margin-top: 1rem;
+  text-decoration: none; /* Usuwamy domyślne podkreślenie */
+  flex-shrink: 0; /* Zapewnia, że przyciski nie będą się kurczyć na małych ekranach */
+}
+
+.categories button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 2px; /* Grubość podkreślenia */
+  background-color: transparent;
+  transition: width 0.3s ease, left 0.3s ease, background-color 0.3s ease;
+  transform: translateX(-50%);
+}
+
+/* Podkreślenie przy hover */
+.categories button:hover::after {
+  width: 50%; /* Podkreślenie zajmuje połowę szerokości przycisku */
+  left: 50%;
+  background-color: lightgray; /* Kolor podkreślenia */
+}
+
+/* Grubsze podkreślenie dla aktywnego przycisku */
+.categories button.active::after {
+  width: 50%;
+  left: 50%;
+  height: 3px; /* Grubsze podkreślenie dla aktywnego przycisku */
+  background-color: #06354C; /* Niebieski kolor dla aktywnego przycisku */
+}
+
+/* Responsywność na ekranach o szerokości mniejszej niż 768px */
+@media (max-width: 768px) {
+  .categories {
+    flex-direction: column; /* Zmienia układ na kolumnowy na mniejszych ekranach */
+    width: 100%; /* Pełna szerokość dla małych ekranów */
+    padding: 0.5rem; /* Zmniejszamy padding */
+  }
+
+  .categories button {
+    width: 100%; /* Przyciski zajmują całą szerokość na małych ekranach */
+    margin-bottom: 0.5rem; /* Dodajemy odstęp między przyciskami */
+    padding: 0.5rem 1rem; /* Zmniejszamy padding przycisków */
+    font-size: 1rem; /* Dostosowujemy rozmiar czcionki */
+  }
+}
+
+@media (max-width: 576px) {
+  .categories {
+    width: 100%; /* Pełna szerokość dla jeszcze mniejszych ekranów */
+    padding: 0.5rem; /* Zmniejszamy padding */
+  }
+
+  .categories button {
+    padding: 0.5rem 1rem; /* Zmniejszamy padding przycisków na małych ekranach */
+    font-size: 0.9rem; /* Zmniejszamy rozmiar czcionki na mniejszych ekranach */
+  }
+}
+
+
 .scroll-trigger {
   height: 2px;
   width: 100%;
