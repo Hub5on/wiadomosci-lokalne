@@ -343,6 +343,7 @@ export default {
       }
       return link;
     },
+    //Zamiana pierwszej litery na wielką w kategorii
     capitalize(text) {
       if (!text) return "";
       return text.charAt(0).toUpperCase() + text.slice(1);
