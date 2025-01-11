@@ -414,6 +414,7 @@ export default {
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  margin-left: 10px;
 }
 
 .static-category.active {
@@ -442,6 +443,9 @@ export default {
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+.categories-mobile button:last-child {
+  margin-right: 10px;
 }
 
 .categories-mobile button.active {
