@@ -362,6 +362,7 @@ export default {
       }
       return link;
     },
+    //Zamiana pierwszej litery na wielką w kategorii
     capitalize(text) {
       if (!text) return "";
       return text.charAt(0).toUpperCase() + text.slice(1);
@@ -402,11 +403,11 @@ export default {
 }
 
 .categories-wrapper-mobile::-webkit-scrollbar {
-  display: none; /* Chrome, Safari i inne WebKit */
+  display: none; 
 }
 
 .static-category {
-  flex-shrink: 0; /* Zapobiega skalowaniu przycisku */
+  flex-shrink: 0; 
   padding: 0.3rem 1rem;
   border: none;
   border-radius: 15px;
