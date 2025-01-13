@@ -241,12 +241,9 @@ export default {
 </script>
 
 <style>
-.fc{
-  height: 600px;
-}
 .calendar-container {
   margin: 0 auto;
-  padding: 10px 0 0 0;
+  padding: 20px 10px 0 10px;
   max-width: 1000px;
   font-family: 'Lato', sans-serif;
   height: 600px;
