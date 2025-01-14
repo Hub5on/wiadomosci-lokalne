@@ -1,8 +1,8 @@
 <template>
   <nav class="navbar navbar-light bg-info text-white">
     <div class="container-fluid d-flex justify-content-between align-items-center">
-      <!-- Tytuł 'Aktualności' -->
-      <span class="navbar-brand mb-0 h1 p-1 text-white">Aktualności</span>
+      <!-- Dynamiczny tytuł na podstawie routingu -->
+      <span class="navbar-brand mb-0 h1 p-1 text-white">{{ pageTitle }}</span>
 
       <!-- Kontener z informacjami o pogodzie -->
       <div v-if="weather" class="d-flex align-items-center justify-content-center">
@@ -25,10 +25,15 @@ export default {
   data() {
     return {
       weather: null,
+      pageTitle: 'Aktualności', // Domyślny tytuł
     };
   },
   mounted() {
     this.getWeather();
+    this.updateTitle(); // Ustaw tytuł po zamontowaniu komponentu
+    this.$router.afterEach(() => { // Reaguj na zmiany w routingu
+      this.updateTitle();
+    });
   },
   methods: {
     async getWeather() {
@@ -76,6 +81,20 @@ export default {
         throw new Error('Błąd uzyskiwania lokalizacji GPS');
       }
     },
+
+    // Funkcja do zmiany tytułu na podstawie trasy
+    updateTitle() {
+      const routeName = this.$route.name;
+      if (routeName === 'HomePage') {
+        this.pageTitle = 'Aktualności';
+      } else if (routeName === 'CalendarPage') {
+        this.pageTitle = 'Kalendarz';
+      } else if (routeName === 'SettingsPage') {
+        this.pageTitle = 'Ustawienia';
+      } else {
+        this.pageTitle = 'Aktualności';
+      }
+    }
   },
 };
 </script>
@@ -105,12 +124,12 @@ export default {
 
 .city-name {
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 
 .temperature {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 500;
   margin-left: 8px;
 }
