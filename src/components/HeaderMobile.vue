@@ -91,6 +91,8 @@ export default {
         this.pageTitle = 'Kalendarz';
       } else if (routeName === 'SettingsPage') {
         this.pageTitle = 'Ustawienia';
+      }else if (routeName === 'NotificationsPage') {
+        this.pageTitle = 'Powiadomienia';
       } else {
         this.pageTitle = 'Aktualności';
       }
