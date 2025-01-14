@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '@/components/HomePage.vue';
 import CalendarPage from '@/components/CalendarPage.vue';
 import SettingsPage from '@/components/SettingsPage.vue';
-
+import NotificationsPage from '@/components/NotificationsPage.vue';
 const routes = [
   {
     path: '/',
@@ -18,6 +18,11 @@ const routes = [
     path: '/ustawienia',
     name: 'SettingsPage',
     component: SettingsPage
+  },
+  {
+    path: '/powiadomienia',
+    name: 'NotificationsPage',
+    component: NotificationsPage
   }
     
 ];
