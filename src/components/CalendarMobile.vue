@@ -2,6 +2,12 @@
   <div class="container">
     <div class="calendar-container">
       <FullCalendar :options="calendarOptions" />
+      <div v-if="selectedEvent" class="event-details">
+        <h3>{{ selectedEvent.title }}</h3>
+        <a :href="selectedEvent.link" target="_blank" class="btn btn-primary">
+          Zobacz szczegóły
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -39,6 +45,7 @@ export default {
         locales: [plLocale],
       },
       addedEvents: new Set(), // Zestaw do przechowywania już dodanych dat
+      selectedEvent: null,
     };
   },
   async created() {
@@ -46,7 +53,18 @@ export default {
   },
   methods: {
     async handleEventClick(info) {
+      // Zapobiegamy domyślnemu kliknięciu wydarzenia
+      info.jsEvent.preventDefault();
+      info.jsEvent.stopPropagation();
+
       try {
+        // Ustawiamy dane wybranego wydarzenia
+        this.selectedEvent = {
+          title: info.event.title,
+          link: info.event.extendedProps.link,
+        };
+
+        // Opcjonalnie: sprawdzamy poprawność linku
         const response = await fetch(
           `/api/proxy?url=${encodeURIComponent(info.event.extendedProps.link)}`
         );
@@ -61,15 +79,13 @@ export default {
             "/aktualnosci2/aktualnosci",
             "/aktualnosci2/archiwum-aktualnosci"
           );
-          window.open(newLink, "_blank");
-        } else {
-          window.open(info.event.extendedProps.link, "_blank");
+          this.selectedEvent.link = newLink;
         }
       } catch (error) {
         console.error("Błąd podczas sprawdzania strony:", error);
-        window.open(info.event.extendedProps.link, "_blank");
       }
     },
+
     async fetchArticles() {
       try {
         const response = await fetch("/api/articles");
@@ -176,10 +192,8 @@ export default {
             let currentDate = new Date(startDate);
             const endDateObj = new Date(endDate);
 
-
             while (currentDate <= endDateObj) {
               const dateStr = currentDate.toISOString().split("T")[0]; // Formatuj datę na 'YYYY-MM-DD'
-
 
               if (!this.addedEvents.has(dateStr)) {
                 events.push({
@@ -209,15 +223,12 @@ export default {
             const startDate = `${year}-${month}-${startDay.padStart(2, "0")}`;
             const endDate = `${year}-${month}-${endDay.padStart(2, "0")}`;
 
-            
             let currentDate = new Date(startDate);
             const endDateObj = new Date(endDate);
 
-            
             while (currentDate <= endDateObj) {
               const dateStr = currentDate.toISOString().split("T")[0];
 
-              
               if (!this.addedEvents.has(dateStr)) {
                 events.push({
                   title: article.title,
@@ -241,63 +252,89 @@ export default {
 </script>
 
 <style>
-.calendar-container {
-  margin: 0 auto;
-  padding: 20px 10px 0 10px;
-  max-width: 1000px;
-  font-family: 'Lato', sans-serif;
-  height: 600px;
+@media (max-width: 768px) {
+  .calendar-container {
+    margin: 0 auto;
+    padding: 20px 10px 0 10px;
+    max-width: 1000px;
+    font-family: "Lato", sans-serif;
+  }
+  .fc {
+    height: 36rem;
+  }
+  .event-details {
+    margin-top: 20px;
+    margin-bottom: 100px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    max-width: 1000px;
+  }
+  .event-details h3 {
+    margin: 0 0 10px;
+    font-size: 1.5em;
+  }
+  .event-link {
+    font-size: 1.2em;
+    color: #007bff;
+    text-decoration: none;
+  }
+  .event-link:hover {
+    text-decoration: underline;
+  }
+  .fc-event-title-container {
+    display: none;
+  }
 }
+  .fc-daygrid-day-top {
+    font-weight: bold;
+  }
 
-.fc-daygrid-day-top {
-  font-weight: bold;
-}
+  .fc-daygrid-day-number {
+    font-size: 1.2em;
+  }
 
-.fc-daygrid-day-number {
-  font-size: 1.2em;
-}
-
-.fc-daygrid-day-content {
-  font-size: 0.9em;
-}
+  .fc-daygrid-day-content {
+    font-size: 0.9em;
+  }
 
 .fc-toolbar-title {
-  font-size: 1.5em;
-  font-weight: 700;
-}
+    font-size: 1.2em !important;
+    font-weight: 700;
+  }
+  .fc-button {
+    font-size: 0.9em;
+    border-radius: 4px;
+  }
 
-.fc-button {
-  font-size: 0.9em;
-  border-radius: 4px;
-}
+  .fc-button-primary {
+    border: none;
+    color: #fff;
+  }
 
-.fc-button-primary {
-  border: none;
-  color: #fff;
-}
+  .fc-button-primary:hover {
+    background-color: #0056b3;
+  }
 
-.fc-button-primary:hover {
-  background-color: #0056b3;
-}
+  .fc-daygrid-day-number {
+    color: #000;
+    text-decoration: none;
+  }
 
-.fc-daygrid-day-number {
-  color: #000;
-  text-decoration: none;
-}
+  .fc-daygrid-day-content {
+    color: #000;
+    text-decoration: none;
+    display: none;
+  }
 
-.fc-daygrid-day-content {
-  color: #000;
-  text-decoration: none;
-  display: none;
-}
+  .fc-col-header-cell-cushion {
+    text-decoration: none;
+    color: #000;
+  }
 
-.fc-col-header-cell-cushion {
-  text-decoration: none;
-  color: #000;
-}
-
-.fc-daygrid-week-number {
-  text-decoration: none;
-}
+  .fc-daygrid-week-number {
+    text-decoration: none;
+  }
 
 </style>
