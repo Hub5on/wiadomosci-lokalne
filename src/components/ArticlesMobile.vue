@@ -27,6 +27,7 @@
     <ul class="list-group list-group-flush p-3">
       <li
         class="list-group-item list-group-item-action article-item rounded-3"
+        :id="'article-' + article._id"
         v-for="article in visibleArticles"
         :key="article._id"
         @mousedown="handleMouseDown(article, $event)"
