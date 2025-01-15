@@ -10,6 +10,8 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
+let recentNotifications = [];
+
 app.listen(PORT, () => {
   console.log(`Serwer działa na http://localhost:${PORT}`);
 });
@@ -30,7 +32,7 @@ const articleSchema = new mongoose.Schema({
   description: String,
   pubDate: Date,
   creator: String,
-  category: String
+  category: String,
 });
 const Article = mongoose.model('Article', articleSchema);
 
@@ -99,6 +101,18 @@ app.get('/api/scrape-rss', async (req, res) => {
         // Zapisz artykuł do bazy danych
         await newArticle.save();
         console.log('Zapisano artykuł:', newArticle.title);
+
+        recentNotifications.push({
+          title: item.title,
+          pubDate: formattedDate,
+          id: newArticle.id,
+        });
+
+        // Zachowaj tylko 3 ostatnie powiadomienia
+        if (recentNotifications.length > 3) {
+          recentNotifications.shift();
+        }
+
         newArticlesCount++;
       } else {
         console.log('Artykuł już istnieje w bazie danych:', existingArticle.title);
@@ -115,6 +129,10 @@ app.get('/api/scrape-rss', async (req, res) => {
     console.error('Błąd pobierania i zapisywania danych:', error);
     res.status(500).json({ message: 'Błąd pobierania i zapisywania danych' });
   }
+});
+
+app.get('/api/notifications', (req, res) => {
+  res.json(recentNotifications);
 });
 
 // Endpoint zwracający wszystkie artykuły
