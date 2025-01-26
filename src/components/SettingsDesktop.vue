@@ -37,11 +37,6 @@
       <button @click="getGPSLocation" class="btn btn-primary w-100">Uzyskaj lokalizację GPS</button>
       <p v-if="gpsLocation" class="mt-3">Twoja lokalizacja: {{ gpsLocation }}</p>
       <button @click="saveCity" class="btn btn-success w-100 mt-3" v-if="gpsLocation">Zapisz lokalizację GPS</button>
-      <div class="mb-3">
-      <button @click="toggleTheme" class="btn btn-secondary w-100 mt-3">
-        Zmień motyw (Aktualny: {{ theme === 'light' ? 'Jasny' : 'Ciemny' }})
-      </button>
-    </div>
     </div>
     
   </div>
@@ -67,13 +62,6 @@ mounted() {
   document.body.setAttribute('data-theme', savedTheme);
 },
   methods: {
-    toggleTheme() {
-    this.theme = this.theme === 'light' ? 'dark' : 'light';
-    localStorage.setItem('theme', this.theme); // Zapisz motyw w localStorage
-
-    // Zaktualizuj klasę na body, aby zmienić styl
-    document.body.setAttribute('data-theme', this.theme);
-  },
     // Pobieranie sugestii miast
     async getLocationSuggestions() {
       if (this.query.trim() === '') {
