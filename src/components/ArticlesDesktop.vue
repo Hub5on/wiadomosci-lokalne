@@ -420,6 +420,11 @@ export default {
     font-size: 1rem;
   }
 }
+@media(max-width: 1600px) {
+  .categories button {
+    padding-left: 0.2rem ;
+  }
+}
 
 @media (max-width: 576px) {
   .categories {
