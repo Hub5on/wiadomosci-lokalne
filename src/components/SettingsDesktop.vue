@@ -65,7 +65,7 @@ mounted() {
         return;
       }
 
-      const apiKey = ' ***REMOVED***'; // Wstaw swój klucz API
+      const apiKey = ' ***REMOVED***'; 
       const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(
         this.query
       )}&key=${apiKey}&language=pl&no_annotations=1`;
