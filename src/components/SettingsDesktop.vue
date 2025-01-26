@@ -53,13 +53,9 @@ export default {
     selectedCity: '',
     locationSource: 'gps', // domyślnie GPS
     gpsLocation: null, // Przechowywanie lokalizacji GPS
-    theme: localStorage.getItem('theme') || 'light', // Ustaw domyślny motyw
   };
 },
 mounted() {
-  // Ustaw motyw na podstawie zapisanych ustawień w localStorage
-  const savedTheme = this.theme;
-  document.body.setAttribute('data-theme', savedTheme);
 },
   methods: {
     // Pobieranie sugestii miast

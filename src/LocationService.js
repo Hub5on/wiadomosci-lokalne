@@ -1,3 +1,4 @@
+// Funkcja do pobierania bieżącej lokalizacji użytkownika
 export async function fetchCurrentLocation() {
   return new Promise((resolve, reject) => {
     if (navigator.geolocation) {
@@ -22,7 +23,7 @@ export async function fetchCurrentLocation() {
     }
   });
 }
-
+// Funkcja do pobierania danych lokalizacyjnych na podstawie współrzędnych
 async function fetchLocationData(latitude, longitude) {
   const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=pl`);
   if (!response.ok) {

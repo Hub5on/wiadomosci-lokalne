@@ -53,6 +53,7 @@
       }
     },
     methods: {
+      // Funkcja obsługująca kliknięcie w powiadomienie
       async handleNotificationClick(notification) {
         try {
           const selectedNotification = {
@@ -67,7 +68,6 @@
           // Przekierowanie na stronę główną
           window.location.href = `${window.location.origin}/#article-${selectedNotification.articleId}`;
   
-          // Opóźnienie przewinięcia do artykułu
           setTimeout(() => {
             this.scrollToArticle(selectedNotification.articleId);
           }, 1000);
@@ -91,7 +91,6 @@
   </script>
   
   <style>
-  /* Opcjonalny styl, aby karty były bardziej estetyczne */
   .card {
     transition: transform 0.2s, box-shadow 0.2s;
   }

@@ -130,7 +130,7 @@ app.get('/api/scrape-rss', async (req, res) => {
     res.status(500).json({ message: 'Błąd pobierania i zapisywania danych' });
   }
 });
-
+// Endpoint do pobierania powiadomień
 app.get('/api/notifications', (req, res) => {
   res.json(recentNotifications);
 });
@@ -145,7 +145,7 @@ app.get('/api/articles', async (req, res) => {
     res.status(500).json({ message: 'Wystąpił błąd podczas pobierania artykułów' });
   }
 });
-
+// Endpoint proxy do pobierania zasobów z zewnętrznych URL
 app.get('/api/proxy', async (req, res) => {
   try {
     const url = req.query.url;
@@ -170,9 +170,9 @@ app.get('/api/proxy', async (req, res) => {
     res.status(500).send('An error occurred while fetching the resource');
   }
 });
-
+// Endpoint do pobierania danych pogodowych
 app.get('/api/get-weather', async (req, res) => {
-  const WEATHER_API = process.env.WEATHER_API; // Access the API key securely on the server side
+  const WEATHER_API = process.env.WEATHER_API; 
   const locationName = req.query.locationName;
 
   if (!locationName) {

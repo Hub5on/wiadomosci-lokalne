@@ -1,3 +1,4 @@
+// Funkcja do pobierania danych pogodowych na podstawie nazwy lokalizacji
 export async function fetchWeather(locationName) {
   try {
     const response = await fetch(`/api/get-weather?locationName=${locationName}`);

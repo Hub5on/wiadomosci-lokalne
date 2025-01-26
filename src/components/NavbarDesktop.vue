@@ -57,6 +57,7 @@ export default {
     this.getWeather();
   },
   methods: {
+    // Funkcja do pobierania danych pogodowych
     async getWeather() {
       // Pobierz lokalizację z ciasteczka
       const cookieCity = document.cookie
@@ -114,18 +115,14 @@ export default {
 
 .navbar-nav {
   display: flex;
-  /* Zmieniamy na flex, aby elementy były obok siebie */
   flex-direction: row;
-  /* Wyświetlamy elementy w wierszu */
   align-items: center;
-  /* Wyrównanie w pionie */
   margin: 0;
   padding: 0;
 }
 
 .navbar-nav .nav-item {
   margin: 0 10px;
-  /* Odstępy między elementami */
 }
 
 .nav-link {
@@ -133,7 +130,6 @@ export default {
   text-decoration: none;
 }
 
-/* Podkreślenie szare przy hover z animacją od środka */
 .nav-link::after {
   content: "";
   position: absolute;
@@ -152,7 +148,6 @@ export default {
   background-color: lightgray;
 }
 
-/* Grubsze podkreślenie niebieskie dla aktywnego linku z animacją od środka */
 .nav-link.active::after {
   width: 50%;
   left: 50%;
@@ -170,7 +165,6 @@ export default {
   height: 100%;
 }
 
-/* Stylizacja pogody */
 .weather-info {
   display: flex;
   align-items: center;
@@ -185,9 +179,9 @@ export default {
   justify-content: center;
   width: 36px;
   height: 36px;
-  background-color: #cecece; /* Jaśniejszy odcień szarości */
-  border-radius: 50%; /* Delikatne zaokrąglenie */
-  margin-right: 8px; /* Margines między ikoną a tekstem */
+  background-color: #cecece; 
+  border-radius: 50%; 
+  margin-right: 8px; 
 }
 
 .weather-icon {

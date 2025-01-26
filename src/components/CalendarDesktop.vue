@@ -45,6 +45,7 @@ export default {
     await this.fetchArticles();
   },
   methods: {
+    // Obsługuje kliknięcie w wydarzenie w kalendarzu
     async handleEventClick(info) {
       try {
         const response = await fetch(
@@ -70,6 +71,7 @@ export default {
         window.open(info.event.extendedProps.link, "_blank");
       }
     },
+    // Pobiera artykuły z API i przetwarza je na wydarzenia kalendarza
     async fetchArticles() {
       try {
         const response = await fetch("/api/articles");
@@ -80,6 +82,7 @@ export default {
         console.error("Błąd pobierania artykułów:", error);
       }
     },
+    //Przekształca daty z artykułów i tworzy wydarzenia kalendarza
     extractDatesFromArticles(articles) {
       const datePattern =
         /\b\d{1,2}\s(?:stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia)\s\d{4}\b/g; // Pełne daty z rokiem
@@ -176,10 +179,8 @@ export default {
             let currentDate = new Date(startDate);
             const endDateObj = new Date(endDate);
 
-
             while (currentDate <= endDateObj) {
               const dateStr = currentDate.toISOString().split("T")[0]; // Formatuj datę na 'YYYY-MM-DD'
-
 
               if (!this.addedEvents.has(dateStr)) {
                 events.push({
@@ -209,15 +210,12 @@ export default {
             const startDate = `${year}-${month}-${startDay.padStart(2, "0")}`;
             const endDate = `${year}-${month}-${endDay.padStart(2, "0")}`;
 
-            
             let currentDate = new Date(startDate);
             const endDateObj = new Date(endDate);
 
-            
             while (currentDate <= endDateObj) {
               const dateStr = currentDate.toISOString().split("T")[0];
 
-              
               if (!this.addedEvents.has(dateStr)) {
                 events.push({
                   title: article.title,
@@ -262,25 +260,22 @@ export default {
 .fc-event {
   cursor: pointer;
   overflow: hidden;
-  white-space: nowrap; /* Domyślnie skrócony tekst */
-  text-overflow: ellipsis; /* Trzy kropki przy zbyt długim tekście */
+  white-space: nowrap;
+  text-overflow: ellipsis;
   transition: all 0.3s ease;
   padding: 5px;
   border-radius: 4px;
 }
-
-/* Efekt hover: rozwinięcie tekstu */
 .fc-event:hover {
-  white-space: normal; /* Pozwala na zawijanie tekstu */
-  overflow: visible; /* Umożliwia wyświetlenie całego tekstu */
+  white-space: normal;
+  overflow: visible;
   transform: scale(1.05);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  z-index: 10; /* Zapewnia, że rozwinięty element będzie widoczny nad innymi */
+  z-index: 10;
 }
 
-/* Ustawienia dla tekstu wewnątrz wydarzenia */
 .fc-event .fc-event-title {
-  word-wrap: break-word; /* Zawijanie długich słów, jeśli jest potrzebne */
-  line-height: 1.4; /* Zwiększa czytelność rozwiniętego tekstu */
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 </style>
