@@ -60,5 +60,31 @@ module.exports = defineConfig({
       start_url: '.', // Określenie URL startowego
       background_color: '#ffffff', // Kolor tła manifestu
     },
+    workboxOptions: {
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/.*\.(?:js|css|html)$/, // Cache'owanie plików statycznych
+          handler: 'StaleWhileRevalidate',
+        },
+        {
+          urlPattern: /^https:\/\/.*\/api\/.*$/, // Cache'owanie dynamicznych zapytań API
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            networkTimeoutSeconds: 10,
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 7 * 24 * 60 * 60, // 1 tydzień
+            },
+          },
+        },
+        {
+          urlPattern: /.*/, // Cache wszystkiego innego jako fallback
+          handler: 'StaleWhileRevalidate',
+        },
+      ],
+      skipWaiting: true,
+      clientsClaim: true,
+    },
   },
 });
