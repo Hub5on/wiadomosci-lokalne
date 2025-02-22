@@ -60,7 +60,7 @@ export default {
         return;
       }
 
-      const apiKey = ' ***REMOVED***'; // Wstaw swój klucz API
+      const apiKey = process.env.VUE_APP_GPS_API; // Wstaw swój klucz API
       const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(
         this.query
       )}&key=${apiKey}&language=pl&no_annotations=1`;
@@ -118,7 +118,7 @@ export default {
           async (position) => {
             const { latitude, longitude } = position.coords;
             // Użycie API do uzyskania nazwy miasta na podstawie współrzędnych GPS
-            const apiKey = process.env.GPS_API; // Wstaw swój klucz API
+            const apiKey = process.env.VUE_APP_GPS_API; // Wstaw swój klucz API
             const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=${apiKey}&language=pl&no_annotations=1`;
 
             try {

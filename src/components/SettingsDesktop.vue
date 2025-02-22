@@ -65,7 +65,7 @@ mounted() {
         return;
       }
 
-      const apiKey = ' ***REMOVED***'; 
+      const apiKey = process.env.VUE_APP_GPS_API; 
       const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(
         this.query
       )}&key=${apiKey}&language=pl&no_annotations=1`;
@@ -134,7 +134,7 @@ mounted() {
           this.gpsLocation = `Lat: ${latitude}, Lon: ${longitude}`;
 
           // Geokodowanie współrzędnych na pełną nazwę lokalizacji
-          const apiKey = process.env.GPS_API; // Wstaw swój klucz API
+          const apiKey = process.env.VUE_APP_GPS_API; // Wstaw swój klucz API
           const endpoint = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}&language=pl&no_annotations=1`;
 
           try {
